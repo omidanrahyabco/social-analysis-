@@ -1,0 +1,882 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body>
+<title>AUT Cohort Pilot</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: an engineering lab report. Numbered sections, numbered figures, one reading column
+   that widens for figures; a sticky section index; data in mono. */
+:root {
+  --bg: #f2f4f5; --surface: #fcfcfb; --ink: #101316; --ink-2: #4a5159; --muted: #80868d;
+  --grid: #e1e4e7; --axis: #c2c7cc; --hair: rgba(16,19,22,.12); --accent: #1f5fa6; --accent-wash: rgba(31,95,166,.10);
+  --pos: #2a78d6; --neg: #e34948; --rom: #e87ba4; --c2: #eb6834;
+  --g1: #eb6834; --g2: #1baf7a; --g3: #6250d6; --g4: #eda100; --g5: #008300; --g0: #9aa0a6;
+  --mid: #f0efec; --good: #0ca30c; --warn: #fab219; --serious: #ec835a; --critical: #d03b3b;
+  --stamp: #b4361f;
+  --f-display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0e1113; --surface: #16191c; --ink: #eef0f2; --ink-2: #b6bcc3; --muted: #858b92;
+  --grid: #262b30; --axis: #384047; --hair: rgba(255,255,255,.10); --accent: #6aa6ea; --accent-wash: rgba(106,166,234,.12);
+  --pos: #3987e5; --neg: #e66767; --rom: #d55181; --c2: #d95926;
+  --g1: #d95926; --g2: #199e70; --g3: #9085e9; --g4: #c98500; --g5: #2f9a2f; --g0: #6b7177;
+  --mid: #383835; --stamp: #ff8a70; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0e1113; --surface: #16191c; --ink: #eef0f2; --ink-2: #b6bcc3; --muted: #858b92;
+  --grid: #262b30; --axis: #384047; --hair: rgba(255,255,255,.10); --accent: #6aa6ea; --accent-wash: rgba(106,166,234,.12);
+  --pos: #3987e5; --neg: #e66767; --rom: #d55181; --c2: #d95926;
+  --g1: #d95926; --g2: #199e70; --g3: #9085e9; --g4: #c98500; --g5: #2f9a2f; --g0: #6b7177;
+  --mid: #383835; --stamp: #ff8a70; color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font: 15px/1.6 var(--f-body); }
+.wrap { max-width: 1140px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--f-display); font-stretch: 78%; text-wrap: balance; margin: 0; line-height: 1.1 }
+h1 { font-size: clamp(34px, 6vw, 60px); font-weight: 760; letter-spacing: -.01em }
+h2 { font-size: clamp(24px, 3.4vw, 32px); font-weight: 720 }
+h3 { font-size: 18px; font-weight: 680; font-stretch: 85% }
+p { margin: 0; max-width: 68ch }
+.mono, code, td.num, .num { font-family: var(--f-mono); font-variant-numeric: tabular-nums }
+.label { font: 500 11px/1.3 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted) }
+a { color: var(--accent) }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+
+/* header */
+header.top { padding-block: 40px 28px; border-bottom: 1px solid var(--hair) }
+.top .row { display: flex; flex-wrap: wrap; gap: 24px; align-items: end; justify-content: space-between }
+.top .lede { color: var(--ink-2); margin-top: 14px; font-size: 16px }
+.stamp { border: 1.5px solid var(--stamp); color: var(--stamp); font: 600 11px/1.35 var(--f-mono); letter-spacing: .1em;
+  text-transform: uppercase; padding: 8px 12px; border-radius: 3px; max-width: 300px }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 28px; margin-top: 22px }
+.facts div { display: grid; gap: 2px }
+.facts b { font: 600 20px/1.1 var(--f-display); font-stretch: 85% }
+
+nav.idx { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--bg); border-bottom: 1px solid var(--hair) }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--bg) }
+nav.idx .wrap { display: flex; gap: 4px; overflow-x: auto; padding-block: 8px; scrollbar-width: none }
+nav.idx a { flex: none; text-decoration: none; color: var(--ink-2); font: 500 12px/1 var(--f-mono); padding: 7px 10px; border-radius: 4px }
+nav.idx a:hover { background: var(--accent-wash); color: var(--ink) }
+
+section.s { padding-block: 44px 8px; scroll-margin-top: 48px }
+.shead { display: grid; grid-template-columns: 56px 1fr; gap: 0 12px; align-items: baseline; margin-bottom: 18px }
+.shead .no { font: 600 13px/1 var(--f-mono); color: var(--accent) }
+.shead p { grid-column: 2; color: var(--ink-2); margin-top: 8px }
+@media (max-width: 560px) { .shead { grid-template-columns: 1fr } .shead p { grid-column: 1 } }
+
+.fig { background: var(--surface); border: 1px solid var(--hair); border-radius: 6px; padding: 16px; margin-top: 16px; min-width: 0 }
+.fig > .cap { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; margin-bottom: 12px }
+.fig > .cap .label { color: var(--accent) }
+.fig > .cap .t { font-weight: 600 }
+.fig > .cap .d { color: var(--ink-2); font-size: 13.5px; flex-basis: 100% }
+.scroll { overflow-x: auto; min-width: 0 }
+svg { display: block; max-width: 100%; height: auto; overflow: visible }
+svg text { fill: var(--ink-2); font-family: var(--f-mono); font-size: 11px }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 16px }
+.cols { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px }
+@media (max-width: 900px) { .cols { grid-template-columns: minmax(0, 1fr) } }
+
+/* summary */
+.findings { display: grid; gap: 0; counter-reset: f }
+.finding { display: grid; grid-template-columns: 28px 1fr; gap: 4px 10px; padding: 14px 0; border-top: 1px solid var(--hair) }
+.finding:first-child { border-top: 0; padding-top: 0 }
+.finding::before { counter-increment: f; content: counter(f); font: 600 12px/1.6 var(--f-mono); color: var(--accent) }
+.finding h3 { grid-column: 2 } .finding p, .finding .th { grid-column: 2; font-size: 14px }
+.finding p { color: var(--ink-2) }
+.th { font: 500 11px/1.4 var(--f-mono); color: var(--muted) }
+.pred { display: grid; grid-template-columns: 64px 1fr; gap: 2px 14px; padding: 12px 0; border-top: 1px solid var(--hair) }
+.pred:first-of-type { border-top: 0 }
+.pred .p { font: 700 26px/1 var(--f-display); font-stretch: 80% }
+.pred .meter { grid-column: 1; height: 4px; background: var(--grid); border-radius: 2px; overflow: hidden; margin-top: 6px }
+.pred .meter i { display: block; height: 100%; background: var(--accent) }
+.pred .body { grid-column: 2; grid-row: 1 / span 2; display: grid; gap: 3px }
+.pred .body b { font-weight: 600 }
+.pred .body span { color: var(--ink-2); font-size: 13.5px }
+.chip { display: inline-flex; align-items: center; gap: 5px; font: 500 11px/1 var(--f-mono); padding: 4px 7px; border-radius: 3px;
+  border: 1px solid var(--hair); color: var(--ink-2); background: var(--surface); white-space: nowrap }
+.chip .dot { width: 8px; height: 8px; border-radius: 50% }
+.chip.hub { border-color: var(--accent); color: var(--accent) }
+.chip.broker { background: var(--accent-wash); border-color: transparent; color: var(--ink) }
+.chip.middle::before, .chip.conflict::before, .chip.enemy::before, .chip.peripheral::before { content: ""; width: 7px; height: 7px; border-radius: 2px }
+.chip.middle::before { background: var(--warn) } .chip.conflict::before { background: var(--critical) }
+.chip.enemy::before { background: var(--serious) } .chip.peripheral::before { background: var(--muted) }
+.chips { display: flex; flex-wrap: wrap; gap: 4px }
+
+/* tables */
+table { border-collapse: collapse; width: 100%; font-size: 13.5px }
+th { text-align: left; font: 500 11px/1.3 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 6px 10px 6px 0; border-bottom: 1px solid var(--axis); white-space: nowrap }
+td { padding: 7px 10px 7px 0; border-bottom: 1px solid var(--grid); vertical-align: top }
+td.num, th.num { text-align: right; white-space: nowrap }
+table.wide { min-width: 660px }
+.files { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px }
+.file { border: 1px solid var(--hair); border-radius: 4px; padding: 10px 12px; background: var(--surface) }
+.file b { display: block; font: 500 13px var(--f-mono) }
+.file span { font: 400 12px var(--f-mono); color: var(--muted) }
+.issue { font-size: 13.5px; color: var(--ink-2); border-left: 3px solid var(--warn); padding: 6px 10px; margin-top: 10px; background: var(--surface) }
+.issue code { font-size: 12px }
+
+/* controls */
+.controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin-bottom: 12px }
+.seg { display: inline-flex; border: 1px solid var(--axis); border-radius: 5px; overflow: hidden; flex-wrap: wrap }
+.seg button { font: 500 12px/1 var(--f-mono); padding: 8px 11px; background: transparent; color: var(--ink-2); border: 0; border-right: 1px solid var(--axis); cursor: pointer }
+.seg button:last-child { border-right: 0 }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface) }
+.seg button.fc[aria-pressed="true"] { background: var(--accent); color: var(--surface) }
+.toggles { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--ink-2) }
+.toggles label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer }
+select { font: 500 13px var(--f-mono); padding: 6px 8px; border-radius: 4px; border: 1px solid var(--axis); background: var(--surface); color: var(--ink) }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; color: var(--ink-2); margin-top: 10px }
+.legend span { display: inline-flex; gap: 6px; align-items: center }
+.sw { width: 18px; height: 0; border-top: 3px solid var(--ink) }
+.sw.dot { width: 10px; height: 10px; border: 0; border-radius: 50% }
+
+.side h3 { margin-bottom: 8px }
+.side ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 13.5px; color: var(--ink-2) }
+.side li b { color: var(--ink); font-weight: 600 }
+.side .block + .block { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--hair) }
+
+/* svg marks */
+.e-pos { stroke: var(--pos) } .e-neg { stroke: var(--neg) } .e-rom { stroke: var(--rom) }
+.f-pos { fill: var(--pos) } .f-neg { fill: var(--neg) } .f-rom { fill: var(--rom) } .f-muted { fill: var(--muted) }
+.f-accent { fill: var(--accent) } .e-accent { stroke: var(--accent) } .f-c2 { fill: var(--c2) } .e-c2 { stroke: var(--c2) }
+.node .shape { fill: var(--surface); stroke: var(--ink); stroke-width: 1.75 }
+.node text { fill: var(--ink); font: 600 11px var(--f-mono); text-anchor: middle; dominant-baseline: central; pointer-events: none }
+.node { cursor: pointer }
+.node:hover .shape, .node.on .shape { stroke-width: 3 }
+.gridline { stroke: var(--grid); stroke-width: 1 }
+.axisline { stroke: var(--axis); stroke-width: 1 }
+.g-1 { --gc: var(--g1) } .g-2 { --gc: var(--g2) } .g-3 { --gc: var(--g3) } .g-4 { --gc: var(--g4) } .g-5 { --gc: var(--g5) } .g-0 { --gc: var(--g0) }
+.hull { fill: var(--gc); fill-opacity: .13; stroke: var(--gc); stroke-opacity: .55; stroke-width: 1.5 }
+.hull-label { fill: var(--ink-2); font: 600 11px var(--f-mono) }
+.band { fill: var(--gc); fill-opacity: .16 }
+.band-edge { fill: var(--gc) }
+.story { fill: none; stroke: var(--ink-2); stroke-width: 2; stroke-linecap: round; transition: opacity .15s }
+.story.dim { opacity: .12 }
+.story.hi { stroke: var(--ink); stroke-width: 3 }
+.fcband { fill: var(--accent); fill-opacity: .12 }
+.ring { stroke: var(--surface); stroke-width: 2 }
+
+#tip { position: fixed; z-index: 50; pointer-events: none; background: var(--ink); color: var(--surface); font-size: 12.5px; line-height: 1.45;
+  padding: 8px 10px; border-radius: 5px; max-width: 280px; box-shadow: 0 4px 14px rgba(0,0,0,.18) }
+#tip b { font-weight: 600 } #tip .m { font-family: var(--f-mono); opacity: .8 }
+.profiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 0 24px }
+.profile { padding: 12px 0; border-top: 1px solid var(--hair); font-size: 13.5px; color: var(--ink-2) }
+.profile b { color: var(--ink); font-family: var(--f-mono) }
+.mini-meter { display: inline-block; width: 64px; height: 6px; border-radius: 3px; background: var(--grid); vertical-align: middle; margin-right: 6px; overflow: hidden }
+.mini-meter i { display: block; height: 100%; background: var(--accent) }
+.note { color: var(--ink-2); font-size: 14px }
+.note li { margin-bottom: 6px }
+footer { padding-block: 48px 64px; color: var(--muted); font-size: 13px }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important } }
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <div class="row">
+      <div style="min-width:0">
+        <div class="label">AUT · Mechanical Engineering · entry Mehr 1403 · pilot run</div>
+        <h1 style="margin-top:10px">Ten students, two semesters</h1>
+        <p class="lede">A full pass of the cohort model on a small invented dataset: what was imported, what the network did over time, why ties changed, and what the model predicts for semester 3.</p>
+      </div>
+      <div class="stamp">Synthetic data. Every person, rating and event here is invented to test the pipeline.</div>
+    </div>
+    <div class="facts" id="facts"></div>
+  </div>
+</header>
+<nav class="idx" aria-label="Sections"><div class="wrap">
+  <a href="#summary">0 Summary</a><a href="#data">1 Data</a><a href="#network">2 Network</a><a href="#groups">3 Groups</a>
+  <a href="#structure">4 Structure</a><a href="#people">5 People</a><a href="#pairs">6 Pairs</a><a href="#model">7 Model</a>
+  <a href="#validation">8 Validation</a><a href="#forecast">9 Forecast</a><a href="#reading">10 Reading</a><a href="#method">11 Method</a>
+</div></nav>
+
+<main class="wrap">
+  <section class="s" id="summary">
+    <div class="shead"><span class="no">§0</span><h2>Summary</h2><p>Everything below was computed by the pipeline from the imported files. The text is generated from the numbers, so it changes when the data does.</p></div>
+    <div class="grid2">
+      <div class="fig"><div class="cap"><span class="label">Findings</span><span class="t">What happened in S1–S2</span></div><div class="findings" id="findings"></div></div>
+      <div class="fig"><div class="cap"><span class="label">Predictions</span><span class="t">End of semester 3, from 1,000 simulated futures</span></div><div id="preds"></div></div>
+    </div>
+  </section>
+
+  <section class="s" id="data">
+    <div class="shead"><span class="no">§1</span><h2>The imported data</h2><p>Six CSV files. People are pseudonyms P01–P10. Each person rated each of the other nine on five layers at four survey waves, two per semester.</p></div>
+    <div class="files" id="files"></div>
+    <div id="issues"></div>
+    <div class="fig"><div class="cap"><span class="label">Table 1</span><span class="t">People</span><span class="d">Big Five from the BFI-10 (1–5). Attractiveness is the mean rating by peers, not one person's view. GPA is out of 20.</span></div>
+      <div class="scroll"><table id="persons" class="wide"></table></div></div>
+    <div class="fig"><div class="cap"><span class="label">Fig. 1</span><span class="t">Shared contexts</span><span class="d">Each cell shows the four waves W1–W4 left to right; a filled square means the person was in that context at that wave. The class-wide chat includes everyone and is ignored by the model.</span></div>
+      <div class="scroll" id="foci"></div></div>
+    <div class="fig"><div class="cap"><span class="label">Fig. 2</span><span class="t">Event log</span><span class="d">Dated incidents, numbered. Dot size is the reported intensity (1–5). Vertical lines are survey waves.</span></div>
+      <div class="scroll"><div id="timeline" style="min-width:680px"></div></div>
+      <div class="legend"><span><i class="sw dot" style="background:var(--pos)"></i>positive</span><span><i class="sw dot" style="background:var(--neg)"></i>negative</span><span><i class="sw dot" style="background:var(--muted)"></i>neutral</span></div>
+      <div class="scroll" style="margin-top:14px"><table id="events" class="wide"></table></div></div>
+    <div class="fig"><div class="cap"><span class="label">Fig. 3</span><span class="t">Raw ratings</span><span class="d">Rows rate columns. Read across a row for how one person sees everyone; compare a cell with its mirror for perception gaps.</span></div>
+      <div class="controls"><label class="toggles">Layer <select id="mLayer"></select></label><div class="seg" id="mWave"></div></div>
+      <div class="scroll"><div id="matrix" style="min-width:420px;max-width:560px"></div></div></div>
+  </section>
+
+  <section class="s" id="network">
+    <div class="shead"><span class="no">§2</span><h2>The network over time</h2><p>Positions stay fixed so that what moves is the relationships. The last tab shows the forecast for the end of semester 3.</p></div>
+    <div class="fig">
+      <div class="controls">
+        <div class="seg" id="nWave"></div>
+        <div class="toggles">
+          <label><input type="checkbox" id="tFriend" checked> friendship</label>
+          <label><input type="checkbox" id="tHost" checked> hostility</label>
+          <label><input type="checkbox" id="tRom" checked> romance</label>
+          <label><input type="checkbox" id="tGroups" checked> groups</label>
+        </div>
+      </div>
+      <div class="cols">
+        <div style="min-width:0"><div id="net"></div>
+          <div class="legend">
+            <span><i class="sw" style="border-color:var(--pos)"></i>friendship (width = strength)</span>
+            <span><i class="sw" style="border-color:var(--neg)"></i>hostility</span>
+            <span><i class="sw" style="border-color:var(--rom);border-top-width:4px"></i>dating</span>
+            <span><i class="sw" style="border-color:var(--rom);border-top-style:dashed;border-top-width:2px"></i>ex</span>
+            <span><i class="sw" style="border-color:var(--rom);border-top-width:1.5px"></i>→ interest</span>
+            <span>■ man &nbsp;● woman</span>
+          </div></div>
+        <div class="side" id="netSide"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="s" id="groups">
+    <div class="shead"><span class="no">§3</span><h2>Groups forming and breaking</h2><p>Groups are found separately at each wave (Louvain on friendship strength, hostile pairs excluded), then matched across waves so a group keeps its name and colour while most of its members stay.</p></div>
+    <div class="fig"><div class="cap"><span class="label">Fig. 4</span><span class="t">Who was in which group</span><span class="d">Each line is one person. Hover a line or a name to follow it.</span></div>
+      <div class="scroll"><div id="story" style="min-width:640px"></div></div></div>
+    <div class="fig"><div class="cap"><span class="label">Table 2</span><span class="t">Group events by wave</span></div><div class="scroll"><table id="gevents" class="wide"></table></div></div>
+  </section>
+
+  <section class="s" id="structure">
+    <div class="shead"><span class="no">§4</span><h2>Structure, wave by wave</h2><p>Each panel is one measure of the whole cohort. Hover the points for values.</p></div>
+    <div class="fig"><div class="cap"><span class="label">Fig. 5</span><span class="t">Cohort measures W1–W4</span></div><div id="smalls" class="grid2" style="grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr));gap:18px"></div></div>
+  </section>
+
+  <section class="s" id="people">
+    <div class="shead"><span class="no">§5</span><h2>Roles and people</h2><p>Roles come from position in the network: many friends (hub), sitting between groups (broker), friends with two people who are hostile to each other (caught in the middle), hostile ties, or one friend or none (peripheral).</p></div>
+    <div class="fig"><div class="cap"><span class="label">Table 3</span><span class="t">Roles at each wave</span></div><div class="scroll"><table id="roles" class="wide"></table></div></div>
+    <div class="fig"><div class="cap"><span class="label">Fig. 6</span><span class="t">Given versus received, at the last wave</span><span class="d">Mean friendship rating each person gives the other nine, against the mean they receive. A long bar means one side invests more.</span></div>
+      <div class="scroll"><div id="gives" style="min-width:520px;max-width:760px"></div></div>
+      <div class="legend"><span><i class="sw dot" style="background:var(--accent)"></i>gives</span><span><i class="sw dot" style="background:var(--c2)"></i>receives</span></div></div>
+    <div class="fig"><div class="cap"><span class="label">Profiles</span><span class="t">One paragraph per person, generated from the results</span></div><div class="profiles" id="profiles"></div></div>
+  </section>
+
+  <section class="s" id="pairs">
+    <div class="shead"><span class="no">§6</span><h2>One relationship, all layers</h2><p>Pick two people to see how each rated the other over time, and the events they shared.</p></div>
+    <div class="fig">
+      <div class="controls"><label class="toggles">Person A <select id="pA"></select></label><label class="toggles">Person B <select id="pB"></select></label></div>
+      <div id="pairCharts" class="grid2" style="grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr));gap:14px"></div>
+      <div class="legend" id="pairLegend"></div>
+      <div id="pairEvents" style="margin-top:12px"></div>
+    </div>
+  </section>
+
+  <section class="s" id="model">
+    <div class="shead"><span class="no">§7</span><h2>Why ties changed</h2><p>A tie-change regression: for every person rating every other person, the change in friendship from one wave to the next. It stands in for RSiena, which needs more people and waves than this pilot has.</p></div>
+    <div class="fig"><div class="cap"><span class="label">Fig. 7</span><span class="t">Effects on the change in a friendship rating</span><span class="d" id="modelCap"></span></div>
+      <div class="scroll"><div id="coefs" style="min-width:640px"></div></div>
+      <div class="legend"><span><i class="sw dot" style="background:var(--pos)"></i>clearly positive</span><span><i class="sw dot" style="background:var(--neg)"></i>clearly negative</span><span><i class="sw dot" style="background:var(--muted)"></i>interval crosses zero</span></div></div>
+  </section>
+
+  <section class="s" id="validation">
+    <div class="shead"><span class="no">§8</span><h2>Does the model work?</h2><p>Two tests on the observed period. One-step: start from each real wave and predict the next. Free run: start from W1 and let the model produce everything after it, including the drama.</p></div>
+    <div class="grid2">
+      <div class="fig"><div class="cap"><span class="label">Fig. 8</span><span class="t">One-step error on friendship ties</span><span class="d">Brier score, lower is better. The baseline assumes every tie stays as it was.</span></div><div id="brier"></div>
+        <div class="legend"><span><i class="sw dot" style="background:var(--accent)"></i>model</span><span><i class="sw dot" style="background:var(--muted)"></i>no-change baseline</span></div><p class="note" id="brierNote" style="margin-top:10px"></p></div>
+      <div class="fig"><div class="cap"><span class="label">Fig. 9</span><span class="t">Free run from W1</span><span class="d">Shaded: middle 80% of 500 simulated histories. Line: their median. Dots: what was observed.</span></div><div id="free" class="grid2" style="grid-template-columns:repeat(auto-fill,minmax(min(100%,160px),1fr));gap:10px"></div></div>
+    </div>
+  </section>
+
+  <section class="s" id="forecast">
+    <div class="shead"><span class="no">§9</span><h2>Semester 3 forecast</h2><p id="fcLede"></p></div>
+    <div class="grid2">
+      <div class="fig"><div class="cap"><span class="label">Fig. 10</span><span class="t">Each pair at the end of S3</span><span class="d">Blue: probability of friendship. Red: probability of hostility. Numbers are the larger of the two, in percent.</span></div>
+        <div class="scroll"><div id="fcMatrix" style="min-width:420px"></div></div></div>
+      <div class="fig"><div class="cap"><span class="label">Fig. 11</span><span class="t">Cohort measures, observed and forecast</span><span class="d">Solid: observed W1–W4. Dashed and shaded: forecast median and middle 80% for W5 (S3 mid) and W6 (S3 end).</span></div>
+        <div id="fan" class="grid2" style="grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr));gap:12px"></div></div>
+    </div>
+    <div class="fig"><div class="cap"><span class="label">Fig. 12</span><span class="t">How the unbalanced triangle resolves</span><span class="d">The person in the middle is friends with two people who are hostile to each other.</span></div><div id="triads"></div><div class="legend" id="triadLegend"></div></div>
+    <div class="fig"><div class="cap"><span class="label">Table 4</span><span class="t">Risk by person</span></div><div class="scroll"><table id="risk" class="wide"></table></div></div>
+  </section>
+
+  <section class="s" id="reading">
+    <div class="shead"><span class="no">§10</span><h2>Reading it psychologically and sociologically</h2><p>Each pattern in this run, the theory it fits, and the number that supports it.</p></div>
+    <div class="fig"><div class="scroll"><table id="theory" class="wide"></table></div></div>
+  </section>
+
+  <section class="s" id="method">
+    <div class="shead"><span class="no">§11</span><h2>Method and limits</h2></div>
+    <div class="fig note"><ul id="methodList" style="padding-left:18px;margin:0"></ul></div>
+  </section>
+</main>
+<footer class="wrap" id="foot"></footer>
+<div id="tip" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+const D = {"meta":{"dataset":"example_10p_2sem","generated":"2026-10-28","n":10,"synthetic":true},"ids":["P01","P02","P03","P04","P05","P06","P07","P08","P09","P10"],"waves":[{"id":"W1","label":"S1 mid (Aban 1403)","date":"2024-11-15","semester":"S1"},{"id":"W2","label":"S1 end (Bahman 1403)","date":"2025-01-25","semester":"S1"},{"id":"W3","label":"S2 mid (Farvardin 1404)","date":"2025-04-20","semester":"S2"},{"id":"W4","label":"S2 end (Tir 1404)","date":"2025-06-28","semester":"S2"}],"persons":[{"id":"P01","gender":"M","origin":"Isfahan","entry_age":18,"extraversion":4.6,"agreeableness":3.8,"conscientiousness":2.6,"neuroticism":2.5,"openness":3.4,"attractiveness_peer":3.2},{"id":"P02","gender":"M","origin":"Tabriz","entry_age":18,"extraversion":2.1,"agreeableness":3.5,"conscientiousness":4.5,"neuroticism":2.8,"openness":3.9,"attractiveness_peer":2.9},{"id":"P03","gender":"M","origin":"Tehran","entry_age":18,"extraversion":4.5,"agreeableness":2.6,"conscientiousness":2.4,"neuroticism":3.0,"openness":3.2,"attractiveness_peer":4.4},{"id":"P04","gender":"M","origin":"Tehran","entry_age":18,"extraversion":3.4,"agreeableness":4.1,"conscientiousness":3.5,"neuroticism":2.2,"openness":3.0,"attractiveness_peer":3.3},{"id":"P05","gender":"M","origin":"Mashhad","entry_age":19,"extraversion":3.9,"agreeableness":4.3,"conscientiousness":3.6,"neuroticism":2.0,"openness":3.5,"attractiveness_peer":3.0},{"id":"P06","gender":"M","origin":"Tehran","entry_age":18,"extraversion":1.8,"agreeableness":3.6,"conscientiousness":4.8,"neuroticism":3.4,"openness":4.2,"attractiveness_peer":3.1},{"id":"P07","gender":"F","origin":"Shiraz","entry_age":18,"extraversion":4.2,"agreeableness":4.4,"conscientiousness":4.2,"neuroticism":2.6,"openness":4.0,"attractiveness_peer":3.6},{"id":"P08","gender":"F","origin":"Tehran","entry_age":18,"extraversion":4.0,"agreeableness":2.9,"conscientiousness":3.1,"neuroticism":3.9,"openness":3.3,"attractiveness_peer":4.5},{"id":"P09","gender":"F","origin":"Rasht","entry_age":18,"extraversion":3.8,"agreeableness":3.1,"conscientiousness":2.9,"neuroticism":3.3,"openness":3.6,"attractiveness_peer":4.0},{"id":"P10","gender":"F","origin":"Tehran","entry_age":18,"extraversion":2.4,"agreeableness":3.9,"conscientiousness":4.6,"neuroticism":2.9,"openness":3.8,"attractiveness_peer":3.4}],"person_wave":{"P01":{"W1":{"housing":"dorm","gpa":15.1},"W2":{"housing":"dorm","gpa":15.1},"W3":{"housing":"dorm","gpa":13.8},"W4":{"housing":"dorm","gpa":13.8}},"P02":{"W1":{"housing":"dorm","gpa":17.9},"W2":{"housing":"dorm","gpa":17.9},"W3":{"housing":"rented","gpa":18.2},"W4":{"housing":"rented","gpa":18.2}},"P03":{"W1":{"housing":"family","gpa":14.2},"W2":{"housing":"family","gpa":14.2},"W3":{"housing":"family","gpa":13.1},"W4":{"housing":"family","gpa":13.1}},"P04":{"W1":{"housing":"family","gpa":15.6},"W2":{"housing":"family","gpa":15.6},"W3":{"housing":"family","gpa":15.9},"W4":{"housing":"family","gpa":15.9}},"P05":{"W1":{"housing":"dorm","gpa":15.0},"W2":{"housing":"dorm","gpa":15.0},"W3":{"housing":"rented","gpa":15.4},"W4":{"housing":"rented","gpa":15.4}},"P06":{"W1":{"housing":"family","gpa":18.6},"W2":{"housing":"family","gpa":18.6},"W3":{"housing":"family","gpa":18.9},"W4":{"housing":"family","gpa":18.9}},"P07":{"W1":{"housing":"dorm","gpa":17.4},"W2":{"housing":"dorm","gpa":17.4},"W3":{"housing":"dorm","gpa":17.8},"W4":{"housing":"dorm","gpa":17.8}},"P08":{"W1":{"housing":"family","gpa":15.4},"W2":{"housing":"family","gpa":15.4},"W3":{"housing":"family","gpa":14.6},"W4":{"housing":"family","gpa":14.6}},"P09":{"W1":{"housing":"dorm","gpa":14.8},"W2":{"housing":"dorm","gpa":14.8},"W3":{"housing":"dorm","gpa":14.5},"W4":{"housing":"dorm","gpa":14.5}},"P10":{"W1":{"housing":"family","gpa":18.1},"W2":{"housing":"family","gpa":18.1},"W3":{"housing":"family","gpa":18.4},"W4":{"housing":"family","gpa":18.4}}},"foci":[{"focus":"class-group","type":"online","members":{"W1":["P01","P02","P03","P04","P05","P06","P07","P08","P09","P10"],"W2":["P01","P02","P03","P04","P05","P06","P07","P08","P09","P10"],"W3":["P01","P02","P03","P04","P05","P06","P07","P08","P09","P10"],"W4":["P01","P02","P03","P04","P05","P06","P07","P08","P09","P10"]}},{"focus":"dorm-A","type":"dorm","members":{"W1":["P01","P02","P05"],"W2":["P01","P02","P05"],"W3":["P01"],"W4":["P01"]}},{"focus":"dorm-B","type":"dorm","members":{"W1":["P07","P09"],"W2":["P07","P09"],"W3":["P07","P09"],"W4":["P07","P09"]}},{"focus":"flat-1","type":"rented","members":{"W3":["P02","P05"],"W4":["P02","P05"]}},{"focus":"statics-sec1","type":"class","members":{"W1":["P01","P03","P04","P05","P08"],"W2":["P01","P03","P04","P05","P08"]}},{"focus":"statics-sec2","type":"class","members":{"W1":["P02","P06","P07","P09","P10"],"W2":["P02","P06","P07","P09","P10"]}},{"focus":"dynamics-sec1","type":"class","members":{"W3":["P01","P02","P03","P05","P09"],"W4":["P01","P02","P03","P05","P09"]}},{"focus":"dynamics-sec2","type":"class","members":{"W3":["P04","P06","P07","P08","P10"],"W4":["P04","P06","P07","P08","P10"]}},{"focus":"gaming-chat","type":"online","members":{"W1":["P01","P03","P04","P05"],"W2":["P01","P03","P04","P05"],"W3":["P01","P03","P04","P05"]}},{"focus":"study-group","type":"study","members":{"W2":["P02","P06","P07","P10"],"W3":["P02","P06","P07","P10"],"W4":["P02","P06","P07","P10"]}},{"focus":"mech-association","type":"extracurricular","members":{"W2":["P04","P05","P07"],"W3":["P04","P05","P07"],"W4":["P04","P05","P07"]}}],"events":[{"date":"2024-10-05","type":"group_formed","valence":"positive","actors":["P01","P03","P04","P05"],"third":[],"intensity":2,"note":"gaming chat formed in first weeks"},{"date":"2024-11-02","type":"started_dating","valence":"positive","actors":["P03","P08"],"third":[],"intensity":3,"note":""},{"date":"2024-12-10","type":"group_formed","valence":"positive","actors":["P02","P06","P07","P10"],"third":[],"intensity":2,"note":"statics study group before midterms"},{"date":"2025-02-03","type":"crush_rejected","valence":"negative","actors":["P01","P07"],"third":[],"intensity":2,"note":"between semesters"},{"date":"2025-02-10","type":"moved_housing","valence":"positive","actors":["P02","P05"],"third":[],"intensity":1,"note":"left dorm, share a rented flat"},{"date":"2025-03-05","type":"gossip","valence":"negative","actors":["P03","P09"],"third":["P08","P04"],"intensity":2,"note":"seen together often in dynamics class"},{"date":"2025-04-06","type":"breakup","valence":"negative","actors":["P03","P08"],"third":["P09","P04","P10"],"intensity":5,"note":"right after Nowruz break"},{"date":"2025-04-12","type":"public_fight","valence":"negative","actors":["P08","P09"],"third":["P07","P10"],"intensity":4,"note":""},{"date":"2025-05-10","type":"fight","valence":"negative","actors":["P03","P04"],"third":["P08"],"intensity":3,"note":"P04 defends P08"},{"date":"2025-05-15","type":"group_dissolved","valence":"negative","actors":["P01","P03","P04","P05"],"third":[],"intensity":2,"note":"gaming chat goes silent"},{"date":"2025-05-25","type":"started_dating","valence":"positive","actors":["P03","P09"],"third":["P08"],"intensity":3,"note":""},{"date":"2025-06-10","type":"cold_shoulder","valence":"negative","actors":["P10","P07"],"third":["P09"],"intensity":2,"note":"P07 still rooms with P09"},{"date":"2025-06-20","type":"support","valence":"positive","actors":["P06","P10"],"third":[],"intensity":2,"note":"exam prep help"}],"R":{"friendship":[[[0,4,3,2,4,0,2,1,1,0],[3,0,1,2,3,2,1,2,0,1],[3,2,0,3,2,1,1,3,1,1],[2,1,4,0,2,1,0,2,1,0],[4,4,2,2,0,1,1,1,0,1],[0,2,1,1,1,0,1,1,1,1],[2,1,1,1,2,1,0,0,4,1],[1,1,3,2,1,1,1,0,1,4],[2,1,1,1,2,1,4,2,0,1],[1,1,1,1,1,0,2,3,1,0]],[[0,4,4,3,5,1,2,2,1,1],[2,0,2,1,4,4,3,1,1,2],[4,1,0,5,4,1,1,4,1,2],[3,0,5,0,3,1,1,4,1,2],[4,4,3,3,0,0,2,1,1,1],[1,5,1,1,1,0,3,2,1,3],[2,3,1,1,2,2,0,2,5,3],[1,1,4,3,1,1,2,0,3,4],[1,1,1,2,1,1,5,3,0,3],[1,2,1,2,0,3,3,4,2,0]],[[0,4,4,3,4,2,1,2,2,1],[1,0,1,1,5,4,4,1,1,3],[3,2,0,5,1,1,0,1,3,0],[4,1,3,0,3,2,2,5,2,3],[3,5,2,3,0,1,3,2,3,1],[1,4,1,3,1,0,5,1,1,4],[2,4,1,2,3,4,0,2,4,4],[1,1,0,4,1,1,2,0,1,5],[3,2,4,0,2,1,5,1,0,1],[2,3,0,3,1,4,4,5,1,0]],[[0,3,3,2,3,1,2,0,2,0],[1,0,1,1,5,5,2,1,0,4],[1,1,0,3,1,0,1,0,4,0],[2,1,2,0,2,3,3,5,1,2],[2,5,1,3,0,1,3,1,3,1],[2,4,0,3,1,0,2,1,1,3],[1,3,1,2,4,3,0,1,3,4],[2,1,0,4,1,1,1,0,1,5],[2,1,4,1,2,2,4,0,0,0],[1,3,0,2,1,4,3,5,1,0]]],"trust":[[[0,4,3,1,3,0,3,0,1,1],[3,0,2,3,3,1,1,2,0,1],[1,1,0,2,2,0,1,2,0,0],[3,1,4,0,2,1,0,2,1,0],[4,4,2,2,0,1,1,1,0,1],[0,3,1,1,1,0,1,0,1,2],[3,2,1,1,2,0,0,1,5,1],[0,0,2,2,1,0,0,0,0,2],[0,1,1,2,1,1,3,1,0,1],[1,1,1,1,1,0,2,3,1,0]],[[0,4,5,4,4,2,1,2,1,1],[2,0,3,1,3,3,2,0,1,2],[3,0,0,4,2,0,0,3,0,1],[3,0,5,0,2,0,0,4,1,2],[4,4,3,3,0,0,3,1,1,1],[1,4,1,1,1,0,3,2,2,3],[2,3,0,1,2,2,0,1,5,3],[1,0,3,2,0,0,2,0,2,3],[1,0,1,1,1,2,4,2,0,3],[1,2,0,1,0,3,3,3,2,0]],[[0,3,4,3,4,3,1,1,3,2],[1,0,0,1,4,3,4,1,1,3],[2,2,0,3,0,0,0,0,2,0],[3,1,3,0,3,1,2,5,3,3],[4,5,2,3,0,1,3,2,3,0],[2,4,1,2,1,0,4,1,1,3],[1,4,1,2,3,4,0,2,4,4],[0,0,0,4,0,1,0,0,0,4],[2,2,3,0,1,1,4,0,0,0],[2,3,0,3,2,4,4,4,0,0]],[[0,2,3,3,2,1,2,0,1,0],[1,0,1,0,3,4,2,2,0,3],[1,0,0,0,0,0,0,0,2,0],[0,1,0,0,3,4,3,5,1,2],[2,5,1,4,0,1,3,1,3,2],[2,4,0,3,2,0,2,1,1,3],[1,3,1,2,4,3,0,1,3,4],[1,0,0,3,0,1,0,0,0,3],[1,1,3,1,1,0,3,0,0,0],[1,3,0,2,1,4,1,5,0,0]]],"hostility":[[[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[1,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,1,0,0,0],[0,0,0,0,0,0,0,1,0,0],[0,0,0,0,1,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,1,0,0,0,0,0,0],[0,1,0,0,0,0,0,0,0,0],[0,0,1,0,0,0,0,0,0,0]],[[0,1,0,0,0,0,0,1,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,1,0,0,0,2,0,2],[0,0,1,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,1,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,4,0,0,0,0,0,5,0],[0,0,0,0,0,0,0,3,0,1],[0,0,2,0,0,0,0,0,2,0]],[[0,1,0,0,1,0,0,0,0,0],[0,0,0,0,1,0,0,0,0,0],[0,0,0,3,0,0,0,2,1,1],[1,0,2,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,3,0,0,0,0,0,5,0],[0,0,0,0,0,0,0,3,0,2],[0,0,3,0,0,0,2,0,4,0]]],"romantic":[[[0,0,0,0,0,0,1,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,1,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,1,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,1,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,2,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,2,0,0,0,0,0,0,0],[0,0,1,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,3,1,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,1],[0,0,0,0,0,0,0,0,0,0],[0,0,3,0,0,0,0,0,0,0],[0,0,1,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,3,2,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,1,0],[0,0,0,0,0,0,0,0,0,1],[0,0,0,0,0,0,0,0,0,0],[0,0,3,0,0,0,0,0,0,0],[0,0,2,0,0,0,0,0,0,0],[0,0,0,0,0,1,0,0,0,0]]],"contact":[[[0,4,4,4,5,0,1,2,1,1],[4,0,1,1,3,3,2,1,2,2],[4,1,0,5,4,1,1,3,1,1],[4,1,5,0,4,1,1,3,1,1],[5,3,4,4,0,1,1,2,1,1],[0,3,1,1,1,0,2,1,2,2],[1,2,1,1,1,2,0,1,5,2],[2,1,3,3,2,1,1,0,2,3],[1,2,1,1,1,2,5,2,0,2],[1,2,1,1,1,2,2,3,2,0]],[[0,3,5,4,5,1,2,2,1,1],[3,0,1,1,4,5,4,1,2,4],[5,1,0,5,4,1,1,5,1,2],[4,1,5,0,5,1,2,3,1,2],[5,4,4,5,0,1,3,2,1,1],[1,5,1,1,1,0,4,1,2,4],[2,4,1,2,3,4,0,2,5,4],[2,1,5,3,2,1,2,0,2,4],[1,2,1,1,1,2,5,2,0,3],[1,4,2,2,1,4,4,4,3,0]],[[0,3,4,3,4,1,2,1,3,1],[3,0,2,1,5,4,4,1,2,3],[4,2,0,4,4,1,1,0,3,0],[3,1,4,0,4,3,4,4,1,3],[4,5,4,4,0,1,3,1,3,1],[1,4,1,3,1,0,5,2,1,5],[2,4,1,4,3,5,0,3,4,5],[1,1,0,4,1,2,3,0,1,4],[3,2,3,1,3,1,4,1,0,1],[1,3,0,3,1,5,5,4,1,0]],[[0,2,2,2,3,1,2,1,3,1],[2,0,2,1,5,4,3,1,2,4],[2,2,0,2,2,0,1,0,5,0],[2,1,2,0,3,3,4,4,1,3],[3,5,2,3,0,1,3,1,3,1],[1,4,0,3,1,0,4,2,1,5],[2,3,1,4,3,4,0,2,3,4],[1,1,0,4,1,2,2,0,0,4],[3,2,5,1,3,1,3,0,0,0],[1,4,0,3,1,5,4,4,0,0]]]},"counts":{"persons":10,"person_wave":40,"foci":133,"dyads":1785,"events":13},"issues":[{"level":"warning","file":"dyads","msg":"3 skipped answers imputed from the other person's rating of the same tie","detail":["W1: P06 about P08","W1: P06 about P09","W3: P03 about P10"]}],"W":[{"metrics":{"density":0.17777777777777778,"reciprocity":1.0,"transitivity":0.3333333333333333,"mean_degree":1.6,"positive_ties":8,"negative_ties":0,"tension":0.0,"signed_triads":1,"ei_gender":-0.75,"ei_housing":-0.75,"ei_origin":-0.75,"focus_share":0.875,"asymmetry":0.4222222222222222,"mean_friendship":1.5666666666666667,"couples":0,"groups":3,"stability":null,"new_ties":8,"lost_ties":0,"new_tie_focus_share":0.875},"baselines":{"ei_gender":0.06666666666666667,"ei_housing":0.1111111111111111,"ei_origin":0.1111111111111111},"modularity":0.375,"groups":[{"label":"G1","members":["P01","P02","P05","P06"]},{"label":"G2","members":["P03","P04","P08","P10"]},{"label":"G3","members":["P07","P09"]}],"group_events":[{"kind":"formed","group":"G1","from":[]},{"kind":"formed","group":"G2","from":[]},{"kind":"formed","group":"G3","from":[]}],"unbalanced":[],"triads":{"+++":1,"+--":0,"++-":0,"---":0},"roles":{"P01":["hub","broker"],"P02":["group member"],"P03":["hub","broker"],"P04":["peripheral"],"P05":["group member"],"P06":["peripheral"],"P07":["peripheral"],"P08":["group member"],"P09":["peripheral"],"P10":["peripheral"]},"people":{"P01":{"degree":3,"strength":4.5,"betweenness":0.2222222222222222,"negative":0,"middle":0,"gives":1.8888888888888888,"receives":2.0},"P02":{"degree":2,"strength":3.0,"betweenness":0.0,"negative":0,"middle":0,"gives":1.6666666666666667,"receives":1.8888888888888888},"P03":{"degree":3,"strength":3.5,"betweenness":0.3055555555555555,"negative":0,"middle":0,"gives":1.8888888888888888,"receives":1.8888888888888888},"P04":{"degree":1,"strength":1.5,"betweenness":0.0,"negative":0,"middle":0,"gives":1.4444444444444444,"receives":1.6666666666666667},"P05":{"degree":2,"strength":3.5,"betweenness":0.0,"negative":0,"middle":0,"gives":1.7777777777777777,"receives":2.0},"P06":{"degree":0,"strength":0.0,"betweenness":0.0,"negative":0,"middle":0,"gives":1.0,"receives":0.8888888888888888},"P07":{"degree":1,"strength":2.0,"betweenness":0.0,"negative":0,"middle":0,"gives":1.4444444444444444,"receives":1.4444444444444444},"P08":{"degree":2,"strength":2.5,"betweenness":0.1388888888888889,"negative":0,"middle":0,"gives":1.6666666666666667,"receives":1.6666666666666667},"P09":{"degree":1,"strength":2.0,"betweenness":0.0,"negative":0,"middle":0,"gives":1.6666666666666667,"receives":1.1111111111111112},"P10":{"degree":1,"strength":1.5,"betweenness":0.0,"negative":0,"middle":0,"gives":1.2222222222222223,"receives":1.1111111111111112}},"couples":[],"exes":[],"crushes":[["P01","P07",false],["P03","P08",true],["P08","P03",true]],"S":[[0,1,1,0,1,0,0,0,0,0],[1,0,0,0,1,0,0,0,0,0],[1,0,0,1,0,0,0,1,0,0],[0,0,1,0,0,0,0,0,0,0],[1,1,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,1,0],[0,0,1,0,0,0,0,0,0,1],[0,0,0,0,0,0,1,0,0,0],[0,0,0,0,0,0,0,1,0,0]]},{"metrics":{"density":0.3888888888888889,"reciprocity":0.9142857142857143,"transitivity":0.4090909090909091,"mean_degree":3.4,"positive_ties":17,"negative_ties":0,"tension":0.0,"signed_triads":6,"ei_gender":-0.5294117647058824,"ei_housing":-0.17647058823529413,"ei_origin":-0.17647058823529413,"focus_share":0.8823529411764706,"asymmetry":0.35555555555555557,"mean_friendship":2.2222222222222223,"couples":1,"groups":3,"stability":0.47058823529411764,"new_ties":9,"lost_ties":0,"new_tie_focus_share":0.8888888888888888},"baselines":{"ei_gender":0.06666666666666667,"ei_housing":0.1111111111111111,"ei_origin":0.1111111111111111},"modularity":0.25561556927297674,"groups":[{"label":"G4","members":["P01","P03","P04","P05"]},{"label":"G3","members":["P07","P08","P09","P10"]},{"label":"G1","members":["P02","P06"]}],"group_events":[{"kind":"split","group":"G1","into":["G4","G1"]},{"kind":"split","group":"G2","into":["G4","G3"]},{"kind":"formed","group":"G4","from":["G1","G2"]},{"kind":"changed","group":"G3","joined":["P08","P10"],"left":[]},{"kind":"changed","group":"G1","joined":[],"left":["P01","P05"]}],"unbalanced":[],"triads":{"+++":6,"+--":0,"++-":0,"---":0},"roles":{"P01":["group member"],"P02":["broker"],"P03":["group member"],"P04":["group member"],"P05":["group member"],"P06":["group member"],"P07":["group member"],"P08":["broker"],"P09":["group member"],"P10":["group member"]},"people":{"P01":{"degree":4,"strength":6.5,"betweenness":0.0,"negative":0,"middle":0,"gives":2.5555555555555554,"receives":2.111111111111111},"P02":{"degree":4,"strength":6.5,"betweenness":0.25,"negative":0,"middle":0,"gives":2.2222222222222223,"receives":2.3333333333333335},"P03":{"degree":4,"strength":8.5,"betweenness":0.16666666666666666,"negative":0,"middle":0,"gives":2.5555555555555554,"receives":2.4444444444444446},"P04":{"degree":4,"strength":6.5,"betweenness":0.0,"negative":0,"middle":0,"gives":2.2222222222222223,"receives":2.3333333333333335},"P05":{"degree":4,"strength":7.0,"betweenness":0.1388888888888889,"negative":0,"middle":0,"gives":2.111111111111111,"receives":2.3333333333333335},"P06":{"degree":2,"strength":3.5,"betweenness":0.027777777777777776,"negative":0,"middle":0,"gives":2.0,"receives":1.5555555555555556},"P07":{"degree":3,"strength":5.0,"betweenness":0.1111111111111111,"negative":0,"middle":0,"gives":2.3333333333333335,"receives":2.4444444444444446},"P08":{"degree":4,"strength":6.5,"betweenness":0.25,"negative":0,"middle":0,"gives":2.2222222222222223,"receives":2.5555555555555554},"P09":{"degree":2,"strength":4.0,"betweenness":0.08333333333333333,"negative":0,"middle":0,"gives":2.0,"receives":1.7777777777777777},"P10":{"degree":3,"strength":4.0,"betweenness":0.027777777777777776,"negative":0,"middle":0,"gives":2.0,"receives":2.3333333333333335}},"couples":[["P03","P08"]],"exes":[],"crushes":[["P01","P07",false],["P09","P03",false]],"S":[[0,1,1,1,1,0,0,0,0,0],[1,0,0,0,1,1,1,0,0,0],[1,0,0,1,1,0,0,1,0,0],[1,0,1,0,1,0,0,1,0,0],[1,1,1,1,0,0,0,0,0,0],[0,1,0,0,0,0,0,0,0,1],[0,1,0,0,0,0,0,0,1,1],[0,0,1,1,0,0,0,0,1,1],[0,0,0,0,0,0,1,1,0,0],[0,0,0,0,0,1,1,1,0,0]]},{"metrics":{"density":0.4444444444444444,"reciprocity":0.9,"transitivity":0.4528301886792453,"mean_degree":3.6,"positive_ties":18,"negative_ties":3,"tension":0.16666666666666666,"signed_triads":12,"ei_gender":-0.1111111111111111,"ei_housing":0.2222222222222222,"ei_origin":-0.1111111111111111,"focus_share":1.0,"asymmetry":0.6,"mean_friendship":2.3666666666666667,"couples":0,"groups":3,"stability":0.5909090909090909,"new_ties":5,"lost_ties":4,"new_tie_focus_share":1.0},"baselines":{"ei_gender":0.06666666666666667,"ei_housing":0.37777777777777777,"ei_origin":0.1111111111111111},"modularity":0.17191582515359088,"groups":[{"label":"G1","members":["P02","P05","P06","P07"]},{"label":"G4","members":["P01","P03","P09"]},{"label":"G3","members":["P04","P08","P10"]}],"group_events":[{"kind":"changed","group":"G1","joined":["P05","P07"],"left":[]},{"kind":"changed","group":"G4","joined":["P09"],"left":["P04","P05"]},{"kind":"changed","group":"G3","joined":["P04"],"left":["P07","P09"]}],"unbalanced":[{"middle":"P04","sides":["P03","P08"]},{"middle":"P04","sides":["P03","P10"]}],"triads":{"+++":8,"+--":2,"++-":2,"---":0},"roles":{"P01":["group member"],"P02":["group member"],"P03":["in open conflict"],"P04":["hub","caught in the middle"],"P05":["group member"],"P06":["group member"],"P07":["hub","broker"],"P08":["in open conflict"],"P09":["one enemy"],"P10":["hub","broker","one enemy"]},"people":{"P01":{"degree":3,"strength":4.5,"betweenness":0.027777777777777776,"negative":0,"middle":0,"gives":2.5555555555555554,"receives":2.2222222222222223},"P02":{"degree":4,"strength":8.0,"betweenness":0.08333333333333333,"negative":0,"middle":0,"gives":2.3333333333333335,"receives":2.888888888888889},"P03":{"degree":3,"strength":5.0,"betweenness":0.05555555555555555,"negative":2,"middle":0,"gives":1.7777777777777777,"receives":1.7777777777777777},"P04":{"degree":5,"strength":8.0,"betweenness":0.1388888888888889,"negative":0,"middle":2,"gives":2.7777777777777777,"receives":2.6666666666666665},"P05":{"degree":4,"strength":6.5,"betweenness":0.1111111111111111,"negative":0,"middle":0,"gives":2.5555555555555554,"receives":2.3333333333333335},"P06":{"degree":3,"strength":6.5,"betweenness":0.0,"negative":0,"middle":0,"gives":2.3333333333333335,"receives":2.2222222222222223},"P07":{"degree":5,"strength":10.0,"betweenness":0.19444444444444442,"negative":0,"middle":0,"gives":2.888888888888889,"receives":2.888888888888889},"P08":{"degree":2,"strength":5.5,"betweenness":0.0,"negative":2,"middle":0,"gives":1.7777777777777777,"receives":2.2222222222222223},"P09":{"degree":2,"strength":4.0,"betweenness":0.08333333333333333,"negative":1,"middle":0,"gives":2.111111111111111,"receives":2.0},"P10":{"degree":5,"strength":9.0,"betweenness":0.16666666666666666,"negative":1,"middle":0,"gives":2.5555555555555554,"receives":2.4444444444444446}},"couples":[],"exes":[["P03","P08"]],"crushes":[["P03","P09",true],["P06","P10",false],["P09","P03",true]],"S":[[0,0,1,1,1,0,0,0,0,0],[0,0,0,0,1,1,1,0,0,1],[1,0,0,1,0,0,0,-1,1,-1],[1,0,1,0,1,0,0,1,0,1],[1,1,0,1,0,0,1,0,0,0],[0,1,0,0,0,0,1,0,0,1],[0,1,0,0,1,1,0,0,1,1],[0,0,-1,1,0,0,0,0,-1,1],[0,0,1,0,0,0,1,-1,0,0],[0,1,-1,1,0,1,1,1,0,0]]},{"metrics":{"density":0.34444444444444444,"reciprocity":0.7096774193548387,"transitivity":0.15789473684210525,"mean_degree":2.2,"positive_ties":11,"negative_ties":5,"tension":0.14285714285714285,"signed_triads":7,"ei_gender":-0.09090909090909091,"ei_housing":-0.09090909090909091,"ei_origin":-0.2727272727272727,"focus_share":1.0,"asymmetry":0.6,"mean_friendship":1.988888888888889,"couples":1,"groups":3,"stability":0.5263157894736842,"new_ties":1,"lost_ties":8,"new_tie_focus_share":1.0},"baselines":{"ei_gender":0.06666666666666667,"ei_housing":0.37777777777777777,"ei_origin":0.1111111111111111},"modularity":0.19302809573361085,"groups":[{"label":"G3","members":["P04","P06","P08","P10"]},{"label":"G4","members":["P01","P03","P09"]},{"label":"G1","members":["P02","P05","P07"]}],"group_events":[{"kind":"changed","group":"G3","joined":["P06"],"left":[]},{"kind":"stable","group":"G4"},{"kind":"changed","group":"G1","joined":[],"left":["P06"]}],"unbalanced":[{"middle":"P07","sides":["P09","P10"]}],"triads":{"+++":1,"+--":5,"++-":1,"---":0},"roles":{"P01":["peripheral"],"P02":["group member"],"P03":["in open conflict","peripheral"],"P04":["one enemy"],"P05":["group member"],"P06":["group member"],"P07":["broker","caught in the middle"],"P08":["in open conflict"],"P09":["in open conflict"],"P10":["hub","broker","in open conflict"]},"people":{"P01":{"degree":0,"strength":0.0,"betweenness":0.0,"negative":0,"middle":0,"gives":1.7777777777777777,"receives":1.5555555555555556},"P02":{"degree":3,"strength":7.0,"betweenness":0.1111111111111111,"negative":0,"middle":0,"gives":2.2222222222222223,"receives":2.4444444444444446},"P03":{"degree":1,"strength":2.0,"betweenness":0.0,"negative":3,"middle":0,"gives":1.2222222222222223,"receives":1.3333333333333333},"P04":{"degree":2,"strength":3.5,"betweenness":0.0,"negative":1,"middle":0,"gives":2.3333333333333335,"receives":2.3333333333333335},"P05":{"degree":2,"strength":4.5,"betweenness":0.08333333333333333,"negative":0,"middle":0,"gives":2.2222222222222223,"receives":2.2222222222222223},"P06":{"degree":3,"strength":5.0,"betweenness":0.05555555555555555,"negative":0,"middle":0,"gives":1.8888888888888888,"receives":2.2222222222222223},"P07":{"degree":3,"strength":4.5,"betweenness":0.3333333333333333,"negative":0,"middle":1,"gives":2.4444444444444446,"receives":2.3333333333333335},"P08":{"degree":2,"strength":5.5,"betweenness":0.1111111111111111,"negative":2,"middle":0,"gives":1.7777777777777777,"receives":1.5555555555555556},"P09":{"degree":2,"strength":3.5,"betweenness":0.19444444444444442,"negative":2,"middle":0,"gives":1.7777777777777777,"receives":1.7777777777777777},"P10":{"degree":4,"strength":7.5,"betweenness":0.3333333333333333,"negative":2,"middle":0,"gives":2.2222222222222223,"receives":2.111111111111111}},"couples":[["P03","P09"]],"exes":[["P03","P08"]],"crushes":[["P05","P09",false],["P06","P10",true],["P10","P06",true]],"S":[[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,1,1,0,0,0,1],[0,0,0,-1,0,0,0,-1,1,-1],[0,0,-1,0,0,1,0,1,0,0],[0,1,0,0,0,0,1,0,0,0],[0,1,0,1,0,0,0,0,0,1],[0,0,0,0,1,0,0,0,1,1],[0,0,-1,1,0,0,0,0,-1,1],[0,0,1,0,0,0,1,-1,0,-1],[0,1,-1,0,0,1,1,1,-1,0]]}],"layout":{"P01":[0.8298,0.9292],"P02":[0.2704,0.9631],"P03":[1.0,0.4847],"P04":[0.6543,0.3721],"P05":[0.5832,1.0],"P06":[0.0,0.6662],"P07":[0.3778,0.6513],"P08":[0.5095,0.0],"P09":[0.736,0.6339],"P10":[0.2057,0.2539]},"model":{"coefs":[{"key":"level","label":"Current friendship level","theory":"state dependence: high ties have less room to grow","beta":-0.547097528586648,"lo":-0.7762339542587451,"hi":-0.3982745601172651,"raw":-0.40641575294840915,"sd":1.3461523688922996,"clear":true},{"key":"recip_gap","label":"The other person rates the tie higher","theory":"reciprocity: people adjust toward the other side","beta":0.12890780906475968,"lo":0.020145898140308954,"hi":0.23683490880407804,"raw":0.17180639107626178,"sd":0.7503085784948503,"clear":true},{"key":"common","label":"Common friends","theory":"triadic closure: friends of friends become friends","beta":-0.14725845553192995,"lo":-0.24835590924865125,"hi":-0.02574904002777088,"raw":-0.17958707281735972,"sd":0.8199836058450146,"clear":true},{"key":"shared","label":"Shared contexts next wave","theory":"propinquity: dorm, class section, study group","beta":0.35132095524427126,"lo":0.20553471230064554,"hi":0.530557383882847,"raw":0.44487089904527793,"sd":0.7897144002860802,"clear":true},{"key":"shared_late","label":"Shared contexts x semester 2","theory":"do contexts matter less once everyone knows everyone","beta":-0.0001634987563167609,"lo":-0.13835666374418973,"hi":0.14398724942599095,"raw":-0.00024175160662528926,"sd":0.6763088717341236,"clear":false},{"key":"lost_context","label":"Lost a shared context","theory":"moving out, changing section","beta":-0.009949387054417252,"lo":-0.12412953757063158,"hi":0.10873538033768695,"raw":-0.028610424373614968,"sd":0.34775391390534777,"clear":false},{"key":"same_gender","label":"Same gender","theory":"homophily","beta":0.12677714559858233,"lo":0.01516147021734123,"hi":0.23891846469120848,"raw":0.2541196303409211,"sd":0.49888765156985865,"clear":true},{"key":"same_housing","label":"Same housing type","theory":"homophily: dorm, family home, rented","beta":0.14238922634531295,"lo":0.04033941010113581,"hi":0.2798749257661316,"raw":0.2974614248133188,"sd":0.47868131618973253,"clear":true},{"key":"gpa_gap","label":"GPA gap (points out of 20)","theory":"academic homophily","beta":-0.2505373540231562,"lo":-0.39193478291607353,"hi":-0.12832462653176,"raw":-0.16254103050909977,"sd":1.5413791412447715,"clear":true},{"key":"attract_j","label":"Attractiveness of the other person","theory":"status, attraction","beta":0.011806797236517008,"lo":-0.059076658853510766,"hi":0.09583429961623433,"raw":0.02168667670807171,"sd":0.5444263035526479,"clear":false},{"key":"hostility","label":"Hostility between them","theory":"conflict erodes friendship","beta":-0.17580163817851602,"lo":-0.28770693661194197,"hi":-0.07308553115692173,"raw":-0.3570217590000689,"sd":0.4924115512480074,"clear":true},{"key":"unbalanced","label":"Unbalanced triangles on this tie","theory":"balance pressure: Heider","beta":0.0719647463794194,"lo":-0.1511212972637948,"hi":0.19467128580108514,"raw":0.3006791531044209,"sd":0.23934065809486707,"clear":false},{"key":"neg_event","label":"Negative events between them","theory":"breakups, fights, rejection (intensity)","beta":-0.2772741837533256,"lo":-0.44516550387830733,"hi":-0.056030020168499804,"raw":-0.33710226120337544,"sd":0.8225224677031897,"clear":true},{"key":"pos_event","label":"Positive events between them","theory":"dating, joining a group, support (intensity)","beta":0.07796299294553875,"lo":-0.024623535333249017,"hi":0.17798711354797675,"raw":0.15182048983105964,"sd":0.5135208892573949,"clear":false}],"intercept_raw":0.9246226759225186,"r2":0.49143862696268736,"sigma":0.7771532716093341,"n_obs":270,"n_pairs":45},"romance":{"spells":[{"pair":["P03","P08"],"start":"2024-11-02","end":"2025-04-06","months":5.1,"ended":true},{"pair":["P03","P09"],"start":"2025-05-25","end":null,"months":1.1,"ended":false}],"exposure_months":6.199999999999999,"breakups":1,"monthly_hazard":0.16129032258064518},"validation":{"one_step":[{"from_wave":"W1","to_wave":"W2","brier":0.08551432098765434,"brier_persistence":0.2,"changed":9,"changed_called":0.4444444444444444,"brier_negative":0.0,"brier_negative_persistence":0.0},{"from_wave":"W2","to_wave":"W3","brier":0.12686395061728395,"brier_persistence":0.2,"changed":9,"changed_called":0.3333333333333333,"brier_negative":0.05716765432098766,"brier_negative_persistence":0.06666666666666667},{"from_wave":"W3","to_wave":"W4","brier":0.1255995061728395,"brier_persistence":0.2,"changed":9,"changed_called":0.1111111111111111,"brier_negative":0.06492444444444444,"brier_negative_persistence":0.044444444444444446}],"free_run":{"density":{"bands":[{"median":0.17777777777777778,"lo":0.17777777777777778,"hi":0.17777777777777778},{"median":0.26666666666666666,"lo":0.2222222222222222,"hi":0.3111111111111111},{"median":0.3333333333333333,"lo":0.2777777777777778,"hi":0.37777777777777777},{"median":0.3333333333333333,"lo":0.28888888888888886,"hi":0.3888888888888889}],"observed":[0.17777777777777778,0.3888888888888889,0.4444444444444444,0.34444444444444444],"inside":true},"positive_ties":{"bands":[{"median":8.0,"lo":8.0,"hi":8.0},{"median":11.0,"lo":9.0,"hi":14.0},{"median":14.0,"lo":12.0,"hi":17.0},{"median":15.0,"lo":12.0,"hi":17.0}],"observed":[8,17,18,11],"inside":false},"negative_ties":{"bands":[{"median":0.0,"lo":0.0,"hi":0.0},{"median":0.0,"lo":0.0,"hi":0.0},{"median":0.0,"lo":0.0,"hi":1.0},{"median":0.0,"lo":0.0,"hi":1.0}],"observed":[0,0,3,5],"inside":false},"transitivity":{"bands":[{"median":0.3333333333333333,"lo":0.3333333333333333,"hi":0.3333333333333333},{"median":0.391304347826087,"lo":0.1875,"hi":0.5625},{"median":0.3333333333333333,"lo":0.14285714285714285,"hi":0.4620512820512822},{"median":0.27906976744186046,"lo":0.125,"hi":0.42857142857142855}],"observed":[0.3333333333333333,0.4090909090909091,0.4528301886792453,0.15789473684210525],"inside":true},"tension":{"bands":[{"median":0.0,"lo":0.0,"hi":0.0},{"median":0.0,"lo":0.0,"hi":0.0},{"median":0.0,"lo":0.0,"hi":0.0},{"median":0.0,"lo":0.0,"hi":0.25}],"observed":[0.0,0.0,0.16666666666666666,0.14285714285714285],"inside":true},"mean_friendship":{"bands":[{"median":1.5666666666666667,"lo":1.5666666666666667,"hi":1.5666666666666667},{"median":2.220139984788405,"lo":2.0960056489131915,"hi":2.335645393625617},{"median":2.3871659059915364,"lo":2.2497482275011738,"hi":2.510929779934697},{"median":2.3785559789677793,"lo":2.2513866782141574,"hi":2.5008723699030666}],"observed":[1.5666666666666667,2.2222222222222223,2.3666666666666667,1.988888888888889],"inside":false},"ei_gender":{"bands":[{"median":-0.75,"lo":-0.75,"hi":-0.75},{"median":-0.6,"lo":-0.8,"hi":-0.38461538461538464},{"median":-0.3333333333333333,"lo":-0.557142857142857,"hi":-0.15639097744360866},{"median":-0.23076923076923078,"lo":-0.45454545454545453,"hi":-0.05820433436532493}],"observed":[-0.75,-0.5294117647058824,-0.1111111111111111,-0.09090909090909091],"inside":true},"couples":{"bands":[{"median":0.0,"lo":0.0,"hi":0.0},{"median":1.0,"lo":0.0,"hi":1.0},{"median":1.0,"lo":0.0,"hi":1.0},{"median":1.0,"lo":0.0,"hi":1.0}],"observed":[0,1,0,1],"inside":true}}},"forecast":{"runs":1000,"steps":2,"p_positive":[[0.0,0.035,0.403,0.174,0.258,0.025,0.064,0.113,0.43,0.004],[0.035,0.0,0.025,0.072,0.931,0.853,0.398,0.013,0.007,0.644],[0.403,0.025,0.0,0.049,0.092,0.016,0.007,0.001,0.193,0.0],[0.174,0.072,0.049,0.0,0.739,0.498,0.367,0.768,0.063,0.117],[0.258,0.931,0.092,0.739,0.0,0.027,0.485,0.114,0.212,0.01],[0.025,0.853,0.016,0.498,0.027,0.0,0.351,0.016,0.018,0.752],[0.064,0.398,0.007,0.367,0.485,0.351,0.0,0.041,0.863,0.682],[0.113,0.013,0.001,0.768,0.114,0.016,0.041,0.0,0.0,0.746],[0.43,0.007,0.193,0.063,0.212,0.018,0.863,0.0,0.0,0.0],[0.004,0.644,0.0,0.117,0.01,0.752,0.682,0.746,0.0,0.0]],"p_negative":[[0.0,0.0,0.001,0.0,0.0,0.0,0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],[0.001,0.0,0.0,0.173,0.01,0.0,0.0,0.182,0.426,0.11],[0.0,0.0,0.173,0.0,0.0,0.0,0.0,0.0,0.0,0.0],[0.0,0.0,0.01,0.0,0.0,0.0,0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.11],[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],[0.0,0.0,0.182,0.0,0.0,0.0,0.0,0.0,1.0,0.0],[0.0,0.0,0.426,0.0,0.0,0.0,0.0,1.0,0.0,1.0],[0.0,0.0,0.11,0.0,0.0,0.11,0.0,0.0,1.0,0.0]],"p_dating":[[0.0,0.0,0.0,0.0,0.0,0.0,0.002,0.001,0.0,0.0],[0.0,0.0,0.0,0.0,0.0,0.0,0.001,0.0,0.0,0.0],[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.739,0.0],[0.0,0.0,0.0,0.0,0.0,0.0,0.001,0.001,0.0,0.0],[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.017,0.0],[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.647],[0.002,0.001,0.0,0.001,0.0,0.0,0.0,0.0,0.0,0.0],[0.001,0.0,0.0,0.001,0.0,0.0,0.0,0.0,0.0,0.0],[0.0,0.0,0.739,0.0,0.017,0.0,0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0,0.0,0.647,0.0,0.0,0.0,0.0]],"comembership":[[0.0,0.093,0.803,0.317,0.435,0.061,0.289,0.239,0.648,0.037],[0.093,0.0,0.136,0.19,0.405,0.777,0.392,0.233,0.124,0.652],[0.803,0.136,0.0,0.276,0.438,0.094,0.284,0.193,0.622,0.044],[0.317,0.19,0.276,0.0,0.483,0.299,0.223,0.744,0.2,0.317],[0.435,0.405,0.438,0.483,0.0,0.215,0.368,0.341,0.393,0.132],[0.061,0.777,0.094,0.299,0.215,0.0,0.38,0.341,0.095,0.775],[0.289,0.392,0.284,0.223,0.368,0.38,0.0,0.176,0.605,0.381],[0.239,0.233,0.193,0.744,0.341,0.341,0.176,0.0,0.102,0.519],[0.648,0.124,0.622,0.2,0.393,0.095,0.605,0.102,0.0,0.067],[0.037,0.652,0.044,0.317,0.132,0.775,0.381,0.519,0.067,0.0]],"consensus":[["P01","P03","P05","P09"],["P02","P06","P07","P10"],["P04","P08"]],"couple_survival":{"P03-P09":0.551},"couples_now":[["P03","P09"]],"triads":[{"middle":"P07","a":"P09","b":"P10","unresolved":0.569,"drop_a":0.113,"drop_b":0.294,"reconciled":0.0,"other":0.024}],"expected_degree":[1.506,2.978,0.786,2.847,2.868,2.556,3.258,1.812,1.786,2.955],"p_isolated":[0.529,0.041,0.842,0.1,0.077,0.122,0.043,0.327,0.383,0.072],"p_conflict":[0.001,0.0,0.664,0.173,0.01,0.11,0.0,1.0,1.0,1.0],"p_fight":[[0.0,0.0,0.001,0.0,0.0,0.0,0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],[0.001,0.0,0.0,0.187,0.0,0.0,0.0,0.198,0.042,0.123],[0.0,0.0,0.187,0.0,0.0,0.0,0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.014],[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],[0.0,0.0,0.198,0.0,0.0,0.0,0.0,0.0,0.165,0.0],[0.0,0.0,0.042,0.0,0.0,0.0,0.0,0.165,0.0,0.174],[0.0,0.0,0.123,0.0,0.0,0.014,0.0,0.0,0.174,0.0]],"trajectories":{"density":[{"median":0.25555555555555554,"lo":0.2111111111111111,"hi":0.3},{"median":0.26666666666666666,"lo":0.2222222222222222,"hi":0.32222222222222224}],"positive_ties":[{"median":11.0,"lo":9.0,"hi":14.0},{"median":12.0,"lo":9.0,"hi":14.0}],"negative_ties":[{"median":4.0,"lo":4.0,"hi":5.0},{"median":3.0,"lo":2.0,"hi":4.0}],"transitivity":[{"median":0.20689655172413793,"lo":0.0,"hi":0.391304347826087},{"median":0.2222222222222222,"lo":0.0,"hi":0.40935828877005354}],"tension":[{"median":0.16666666666666666,"lo":0.0,"hi":0.25},{"median":0.2222222222222222,"lo":0.0,"hi":0.5}],"mean_friendship":[{"median":2.065186938908802,"lo":1.9431592457207916,"hi":2.1830202412386446},{"median":2.1124682404827038,"lo":1.9770517245015689,"hi":2.2487335290563437}],"ei_gender":[{"median":-0.09090909090909091,"lo":-0.3333333333333333,"hi":0.09090909090909091},{"median":-0.1111111111111111,"lo":-0.38461538461538464,"hi":0.09292929292929339}],"couples":[{"median":1.0,"lo":0.0,"hi":2.0},{"median":1.0,"lo":0.0,"hi":2.0}]},"breakup_prob_per_wave":0.2402191744482155,"breakup_hazard_month":0.10989010989010989,"romance_rates":{"onsets":5.0,"at_risk":132.0,"onset":0.03680981595092025,"mutual":2.0,"formed":2.0,"couple":0.5},"params":{"months_per_wave":2.5,"breakup_prior":[1.0,12.0],"crush_reciprocate":0.1,"crush_fade":0.3,"taken_crush":0.5,"wandering_breakup":2.0,"hostility_decay":0.85,"side_taking":0.4,"jealousy":0.6,"rivalry":0.35,"fight":0.15,"balance_resolution":0.3}},"findings":[{"title":"Contexts made the first friendships","body":"At W1, 88% of friendship ties joined people who shared a dorm, class section, chat or study group. Shared context is the clearest positive driver in the tie-change model (+0.35 rating points per SD).","theory":"Focus theory (Feld); propinquity (Festinger)"},{"title":"Gender lines blurred","body":"The E-I index for gender went from -0.75 to -0.09 (random mixing would give +0.07). Friendships started almost entirely within gender and became nearly as mixed as chance by the end of semester 2.","theory":"Homophily (McPherson et al.), weakening as contact grows"},{"title":"Friendships reshuffle every half-semester","body":"Only 47%\u201359% of friendship ties carry over between waves (Jaccard). The biggest loss came at W4: 8 ties lost, 1 gained.","theory":"Network churn; Dunbar's limit on close ties"},{"title":"Drama follows romance, then spreads through side-taking","body":"Hostile ties went from 0 to 5 after the breakup. Tension (share of signed triangles that are unbalanced) peaked at 17% in W3. People caught between two sides at some point: P04, P07.","theory":"Structural balance (Heider); side-taking"},{"title":"What moves a friendship rating","body":"Strongest clear effects: current friendship level (-0.55); shared contexts next wave (+0.35); negative events between them (-0.28); gpa gap (points out of 20) (-0.25). The model explains 49% of rating changes.","theory":"Tie-change regression; stand-in for RSiena on the full data"},{"title":"Unreciprocated ties are where people get hurt","body":"Largest perception gaps at W4: P01 rates P02 3, gets 1 back; P01 rates P03 3, gets 1 back; P08 rates P01 2, gets 0 back.","theory":"Perception asymmetry; attachment"},{"title":"The model beats 'nothing changes', but drama is hard to foresee","body":"Predicting each wave from the one before, the tie-level error (Brier) is 0.11 against 0.20 for assuming no change. Started from W1 and run freely, it reproduces density, clustering and gender mixing, but not the number of hostile ties: the breakup cascade is path-dependent.","theory":"Back-testing"}],"predictions":[{"kind":"romance","p":0.647,"title":"P06 and P10 start dating","body":"Mutual interest is already reported; both are single."},{"kind":"romance","p":0.44899999999999995,"title":"P03 and P09 break up","body":"Breakup hazard estimated at 0.11 per month (one breakup in W1\u2013W4, shrunk toward a prior)."},{"kind":"balance","p":0.294,"title":"P07 sides with P09 and drifts from P10","body":"P07 is friends with both P09 and P10, who are hostile. Still caught in the middle at the end of S3: 57%; P09 and P10 reconcile: 0%."},{"kind":"isolation","p":0.842,"title":"P03 ends S3 with at most one friend","body":"Expected friendships at the end of S3: 0.8."},{"kind":"isolation","p":0.529,"title":"P01 ends S3 with at most one friend","body":"Expected friendships at the end of S3: 1.5."},{"kind":"conflict","p":0.426,"title":"New hostility between P03 and P09","body":"They are a couple now; this is the risk that a breakup turns hostile, as the last one did."},{"kind":"conflict","p":0.493,"title":"Existing hostilities last through S3","body":"Average over the 5 hostile pairs: P09\u2013P10 100%, P08\u2013P09 100%, P03\u2013P08 18%, P03\u2013P04 17%, P03\u2013P10 11%."}],"profiles":{"P01":"Started as hub, broker (3 friends at W1); now peripheral (0 friends at W4). Forecast for end of S3: 1.5 friends expected, 53% risk of isolation, 0% chance of at least one hostile tie.","P02":"Started as group member (2 friends at W1); now group member (3 friends at W4). Forecast for end of S3: 3.0 friends expected, 4% risk of isolation, 0% chance of at least one hostile tie.","P03":"Started as hub, broker (3 friends at W1); now in open conflict, peripheral (1 friend at W4). Hostile with P04, P08, P10. Romance: dating P09; ex of P08. Forecast for end of S3: 0.8 friends expected, 84% risk of isolation, 66% chance of at least one hostile tie.","P04":"Started as peripheral (1 friend at W1); now one enemy (2 friends at W4). Hostile with P03. Forecast for end of S3: 2.8 friends expected, 10% risk of isolation, 17% chance of at least one hostile tie.","P05":"Started as group member (2 friends at W1); now group member (2 friends at W4). Romance: interested in P09. Forecast for end of S3: 2.9 friends expected, 8% risk of isolation, 1% chance of at least one hostile tie.","P06":"Started as peripheral (0 friends at W1); now group member (3 friends at W4). Romance: interested in P10 (mutual). Forecast for end of S3: 2.6 friends expected, 12% risk of isolation, 11% chance of at least one hostile tie.","P07":"Started as peripheral (1 friend at W1); now broker, caught in the middle (3 friends at W4). Forecast for end of S3: 3.3 friends expected, 4% risk of isolation, 0% chance of at least one hostile tie.","P08":"Started as group member (2 friends at W1); now in open conflict (2 friends at W4). Hostile with P03, P09. Romance: ex of P03. Forecast for end of S3: 1.8 friends expected, 33% risk of isolation, 100% chance of at least one hostile tie.","P09":"Started as peripheral (1 friend at W1); now in open conflict (2 friends at W4). Hostile with P08, P10. Romance: dating P03. Forecast for end of S3: 1.8 friends expected, 38% risk of isolation, 100% chance of at least one hostile tie.","P10":"Started as peripheral (1 friend at W1); now hub, broker, in open conflict (4 friends at W4). Hostile with P03, P09. Romance: interested in P06 (mutual). Forecast for end of S3: 3.0 friends expected, 7% risk of isolation, 100% chance of at least one hostile tie."}};
+const ids = D.ids, n = ids.length, IX = Object.fromEntries(ids.map((p, i) => [p, i]));
+const waves = D.waves, T = waves.length, W = D.W, R = D.R, FC = D.forecast;
+const person = Object.fromEntries(D.persons.map(p => [p.id, p]));
+const pct = p => Math.round(p * 100) + '%';
+const fmt2 = v => (v == null ? '–' : (+v).toFixed(2));
+const el = (sel) => document.querySelector(sel);
+const cssv = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const gnum = lbl => { const k = +String(lbl).replace(/\D/g, ''); return k >= 1 && k <= 5 ? k : 0; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const typeLabel = t => t.replace(/_/g, ' ');
+const fm = (t, i, j) => (R.friendship[t][i][j] + R.friendship[t][j][i]) / 2;
+
+// tooltip
+const tip = d3.select('#tip');
+function showTip(ev, html) { tip.html(html).attr('hidden', null); moveTip(ev); }
+function moveTip(ev) {
+  const r = tip.node().getBoundingClientRect(); let x = ev.clientX + 14, y = ev.clientY + 14;
+  if (x + r.width > innerWidth - 8) x = ev.clientX - r.width - 14;
+  if (y + r.height > innerHeight - 8) y = ev.clientY - r.height - 14;
+  tip.style('left', Math.max(8, x) + 'px').style('top', Math.max(8, y) + 'px');
+}
+const hideTip = () => tip.attr('hidden', '');
+function hover(sel, html) { sel.on('pointerenter', (e, d) => showTip(e, html(d))).on('pointermove', moveTip).on('pointerleave', hideTip); }
+
+const themeHooks = [];
+const onTheme = f => { themeHooks.push(f); f(); };
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => themeHooks.forEach(f => f()));
+new MutationObserver(() => themeHooks.forEach(f => f())).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+function personTip(id, t) {
+  const p = person[id], pw = D.person_wave[id] || {};
+  const w = t != null && t < T ? waves[t].id : waves[T - 1].id;
+  const roles = t != null && t < T ? W[t].roles[id].join(', ') : '';
+  const pp = t != null && t < T ? W[t].people[id] : null;
+  return `<b>${id}</b> <span class="m">${p.gender === 'F' ? 'woman' : 'man'} · ${esc(p.origin)} · ${pw[w] ? pw[w].housing : ''} · GPA ${pw[w] ? pw[w].gpa : ''}</span>` +
+    (pp ? `<br>${pp.degree} friend${pp.degree === 1 ? '' : 's'}, ${pp.negative} hostile tie${pp.negative === 1 ? '' : 's'}<br><span class="m">${roles}</span>` :
+      `<br>forecast: ${FC.expected_degree[IX[id]].toFixed(1)} friends expected, isolation risk ${pct(FC.p_isolated[IX[id]])}`);
+}
+
+// ---------------------------------------------------------------- header + summary
+el('#facts').innerHTML = [
+  ['people', n], ['waves', T + ' · ' + waves[0].date.slice(0, 7) + ' → ' + waves[T - 1].date.slice(0, 7)],
+  ['ratings', D.counts.dyads.toLocaleString()], ['events', D.counts.events], ['simulated futures', FC.runs.toLocaleString()]
+].map(([k, v]) => `<div><span class="label">${k}</span><b>${v}</b></div>`).join('');
+
+el('#findings').innerHTML = D.findings.map(f =>
+  `<div class="finding"><h3>${esc(f.title)}</h3><p>${esc(f.body)}</p><span class="th">${esc(f.theory)}</span></div>`).join('');
+const kindLabel = { romance: 'romance', balance: 'balance', isolation: 'isolation', conflict: 'conflict' };
+el('#preds').innerHTML = D.predictions.map(p =>
+  `<div class="pred"><div class="p">${pct(p.p)}</div><div class="body"><b>${esc(p.title)}</b><span>${esc(p.body)}</span><span><span class="chip">${kindLabel[p.kind] || p.kind}</span></span></div><div class="meter"><i style="width:${p.p * 100}%"></i></div></div>`).join('');
+
+// ---------------------------------------------------------------- §1 data
+const fileRows = [['waves.csv', waves.length], ['persons.csv', D.counts.persons], ['person_wave.csv', D.counts.person_wave],
+  ['foci.csv', D.counts.foci], ['dyads.csv', D.counts.dyads], ['events.csv', D.counts.events]];
+el('#files').innerHTML = fileRows.map(([f, k]) => `<div class="file"><b>${f}</b><span>${k.toLocaleString()} rows</span></div>`).join('');
+el('#issues').innerHTML = D.issues.map(i => `<div class="issue"><b>${i.level}</b> · ${esc(i.file)}: ${esc(i.msg)}${i.detail ? ' (' + i.detail.map(d => `<code>${esc(d)}</code>`).join(', ') + ')' : ''}</div>`).join('');
+
+(function personsTable() {
+  const head = ['ID', 'Gender', 'Origin', 'Housing', 'GPA S1', 'GPA S2', 'E', 'A', 'C', 'N', 'O', 'Attract.'];
+  const sems = [...new Set(waves.map(w => w.semester))];
+  const firstOf = s => waves.find(w => w.semester === s).id;
+  const rows = ids.map(id => {
+    const p = person[id], pw = D.person_wave[id];
+    const hs = [...new Set(waves.map(w => pw[w.id].housing))].join(' → ');
+    const g = sems.map(s => pw[firstOf(s)].gpa);
+    return `<tr><td class="mono">${id}</td><td>${p.gender}</td><td>${esc(p.origin)}</td><td>${hs}</td>` +
+      g.map(v => `<td class="num">${(+v).toFixed(1)}</td>`).join('') +
+      ['extraversion', 'agreeableness', 'conscientiousness', 'neuroticism', 'openness', 'attractiveness_peer'].map(k => `<td class="num">${(+p[k]).toFixed(1)}</td>`).join('') + '</tr>';
+  });
+  el('#persons').innerHTML = `<thead><tr>${head.map((h, i) => `<th class="${i >= 4 ? 'num' : ''}">${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody>`;
+})();
+
+(function fociGrid() {
+  const foci = D.foci.filter(f => !(f.focus === 'class-group'));
+  const cw = 46, rh = 26, lw = 236, top = 26;
+  const svg = d3.select('#foci').append('svg').attr('viewBox', `0 0 ${lw + n * cw + 4} ${top + foci.length * rh}`).style('min-width', '620px');
+  svg.selectAll('text.h').data(ids).join('text').attr('x', (d, i) => lw + i * cw + cw / 2).attr('y', 14).attr('text-anchor', 'middle').text(d => d);
+  foci.forEach((f, r) => {
+    const y = top + r * rh;
+    svg.append('line').attr('class', 'gridline').attr('x1', 0).attr('x2', lw + n * cw).attr('y1', y + rh - 1).attr('y2', y + rh - 1);
+    svg.append('text').attr('x', 0).attr('y', y + rh / 2 + 4).style('fill', 'var(--ink)').text(f.focus).append('tspan').style('fill', 'var(--muted)').style('font-size', '9.5px').text('  ' + f.type);
+    ids.forEach((id, c) => {
+      waves.forEach((w, t) => {
+        const on = (f.members[w.id] || []).includes(id);
+        svg.append('rect').attr('x', lw + c * cw + 5 + t * 9).attr('y', y + 8).attr('width', 7).attr('height', 9).attr('rx', 1.5)
+          .style('fill', on ? 'var(--accent)' : 'var(--grid)');
+      });
+    });
+  });
+})();
+
+(function timeline() {
+  const ev = D.events.map((e, k) => ({ ...e, k: k + 1, d: new Date(e.date) }));
+  const W_ = 900, H_ = 170, m = { l: 20, r: 20, t: 30, b: 28 };
+  const start = d3.timeDay.offset(new Date(waves[0].date), -60), end = d3.timeDay.offset(new Date(waves[T - 1].date), 12);
+  const x = d3.scaleTime().domain([start, end]).range([m.l, W_ - m.r]);
+  const svg = d3.select('#timeline').append('svg').attr('viewBox', `0 0 ${W_} ${H_}`);
+  svg.append('line').attr('class', 'axisline').attr('x1', m.l).attr('x2', W_ - m.r).attr('y1', H_ - m.b).attr('y2', H_ - m.b);
+  svg.selectAll('text.mo').data(x.ticks(d3.timeMonth.every(1))).join('text').attr('x', d => x(d)).attr('y', H_ - 8).attr('text-anchor', 'middle').text(d3.timeFormat('%b %y'));
+  waves.forEach(w => {
+    const xx = x(new Date(w.date));
+    svg.append('line').attr('class', 'gridline').attr('x1', xx).attr('x2', xx).attr('y1', 18).attr('y2', H_ - m.b);
+    svg.append('text').attr('x', xx).attr('y', 12).attr('text-anchor', 'middle').style('fill', 'var(--ink)').text(w.id);
+  });
+  const placed = [];
+  ev.forEach(e => { let lvl = 0; while (placed.some(p => p.lvl === lvl && Math.abs(x(p.d) - x(e.d)) < 24)) lvl++; e.lvl = lvl; placed.push(e); });
+  const g = svg.selectAll('g.ev').data(ev).join('g').attr('transform', e => `translate(${x(e.d)},${H_ - m.b - 22 - e.lvl * 26})`);
+  g.append('circle').attr('r', e => 6 + e.intensity * 1.2).attr('class', e => (e.valence === 'positive' ? 'f-pos' : e.valence === 'negative' ? 'f-neg' : 'f-muted') + ' ring');
+  g.append('text').attr('text-anchor', 'middle').attr('dy', 4).style('fill', '#fff').style('font-weight', 600).style('font-size', '10px').text(e => e.k);
+  hover(g, e => `<b>${e.k}. ${typeLabel(e.type)}</b> <span class="m">${e.date}</span><br>${e.actors.join(', ')}${e.third.length ? '<br><span class="m">involved: ' + e.third.join(', ') + '</span>' : ''}${e.note ? '<br>' + esc(e.note) : ''}`);
+  el('#events').innerHTML = '<thead><tr><th class="num">#</th><th>Date</th><th>Event</th><th>Between</th><th>Also involved</th><th class="num">Int.</th><th>Note</th></tr></thead><tbody>' +
+    ev.map(e => `<tr><td class="num">${e.k}</td><td class="num">${e.date}</td><td><span class="chip"><i class="dot" style="background:var(${e.valence === 'positive' ? '--pos' : e.valence === 'negative' ? '--neg' : '--muted'})"></i>${typeLabel(e.type)}</span></td><td class="mono">${e.actors.join(' · ')}</td><td class="mono">${e.third.join(' · ')}</td><td class="num">${e.intensity}</td><td>${esc(e.note || '')}</td></tr>`).join('') + '</tbody>';
+})();
+
+(function matrix() {
+  const layers = Object.keys(R), max = { friendship: 5, trust: 5, hostility: 5, romantic: 3, contact: 5 };
+  const romName = ['none', 'interest', 'dating', 'ex'];
+  let layer = 'friendship', t = T - 1;
+  el('#mLayer').innerHTML = layers.map(l => `<option value="${l}">${l}</option>`).join('');
+  el('#mLayer').addEventListener('change', e => { layer = e.target.value; draw(); });
+  const seg = d3.select('#mWave').selectAll('button').data(waves).join('button').attr('type', 'button').text(w => w.id)
+    .on('click', (e, w) => { t = waves.indexOf(w); draw(); });
+  const cs = 40, lw = 40, top = 28;
+  const svg = d3.select('#matrix').append('svg').attr('viewBox', `0 0 ${lw + n * cs + 2} ${top + n * cs + 2}`);
+  function draw() {
+    seg.attr('aria-pressed', w => waves.indexOf(w) === t);
+    const pole = cssv(layer === 'hostility' ? '--neg' : layer === 'romantic' ? '--rom' : '--pos'), base = cssv('--mid');
+    const col = d3.interpolateRgb(base, pole);
+    const M = R[layer][t];
+    svg.selectAll('*').remove();
+    ids.forEach((id, k) => {
+      svg.append('text').attr('x', lw + k * cs + cs / 2).attr('y', 16).attr('text-anchor', 'middle').text(id);
+      svg.append('text').attr('x', lw - 6).attr('y', top + k * cs + cs / 2 + 4).attr('text-anchor', 'end').text(id);
+    });
+    const cells = [];
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if (i !== j) cells.push({ i, j, v: M[i][j] });
+    const g = svg.selectAll('g.c').data(cells).join('g').attr('transform', d => `translate(${lw + d.j * cs},${top + d.i * cs})`);
+    g.append('rect').attr('width', cs - 2).attr('height', cs - 2).attr('rx', 3)
+      .style('fill', d => layer === 'romantic' ? (d.v === 0 ? base : d.v === 3 ? cssv('--muted') : col(d.v === 2 ? 1 : .45)) : col(d.v / max[layer]));
+    g.append('text').attr('x', (cs - 2) / 2).attr('y', (cs - 2) / 2 + 4).attr('text-anchor', 'middle')
+      .style('fill', d => (layer === 'romantic' ? d.v >= 2 : d.v / max[layer] > .55) ? '#fff' : cssv('--ink')).style('font-weight', 500)
+      .text(d => layer === 'romantic' ? (d.v ? ['', 'int', 'dat', 'ex'][d.v] : '') : d.v);
+    hover(g, d => `<b>${ids[d.i]} → ${ids[d.j]}</b> · ${waves[t].id}<br>${layer}: ${layer === 'romantic' ? romName[d.v] : d.v}<br><span class="m">${ids[d.j]} → ${ids[d.i]}: ${layer === 'romantic' ? romName[M[d.j][d.i]] : M[d.j][d.i]}</span>`);
+  }
+  onTheme(draw);
+})();
+
+// ---------------------------------------------------------------- §2 network
+(function network() {
+  const VW = 760, VH = 520, m = 46;
+  const P = Object.fromEntries(ids.map(id => [id, [m + D.layout[id][0] * (VW - 2 * m), m + D.layout[id][1] * (VH - 2 * m)]]));
+  const svg = d3.select('#net').append('svg').attr('viewBox', `0 0 ${VW} ${VH}`);
+  const defs = svg.append('defs');
+  defs.append('marker').attr('id', 'arr').attr('viewBox', '0 0 10 10').attr('refX', 9).attr('refY', 5).attr('markerWidth', 7).attr('markerHeight', 7).attr('orient', 'auto')
+    .append('path').attr('d', 'M0,0L10,5L0,10z').attr('class', 'f-rom');
+  const gH = svg.append('g'), gE = svg.append('g'), gN = svg.append('g');
+  const tabs = waves.map((w, t) => ({ t, label: w.id, sub: w.label })).concat([{ t: T, label: 'S3 end · forecast' }]);
+  let cur = T - 1;
+  const seg = d3.select('#nWave').selectAll('button').data(tabs).join('button').attr('type', 'button').attr('class', d => d.t === T ? 'fc' : null)
+    .text(d => d.label).attr('title', d => d.sub || 'forecast').on('click', (e, d) => { cur = d.t; draw(); });
+  ['#tFriend', '#tHost', '#tRom', '#tGroups'].forEach(s => el(s).addEventListener('change', draw));
+
+  // forecast groups take the colour of the W4 group they overlap most
+  const fcGroups = FC.consensus.map(g => {
+    let best = null, bo = 0;
+    W[T - 1].groups.forEach(h => { const o = h.members.filter(x => g.includes(x)).length; if (o > bo) { bo = o; best = h.label; } });
+    return { label: best && bo >= 2 ? best : 'G0', members: g };
+  });
+  const used = new Set();
+  fcGroups.forEach(g => { if (used.has(g.label)) g.label = 'G0'; used.add(g.label); });
+
+  const node = gN.selectAll('g.node').data(ids).join('g').attr('class', 'node').attr('transform', id => `translate(${P[id][0]},${P[id][1]})`).attr('tabindex', 0);
+  node.each(function (id) {
+    const g = d3.select(this);
+    if (person[id].gender === 'F') g.append('circle').attr('class', 'shape').attr('r', 17);
+    else g.append('rect').attr('class', 'shape').attr('x', -16).attr('y', -16).attr('width', 32).attr('height', 32).attr('rx', 7);
+    g.append('text').text(id);
+  });
+  hover(node, id => personTip(id, cur));
+
+  function hullPath(members) {
+    const pts = [];
+    members.forEach(id => { for (let a = 0; a < 12; a++) pts.push([P[id][0] + 31 * Math.cos(a * Math.PI / 6), P[id][1] + 31 * Math.sin(a * Math.PI / 6)]); });
+    const h = d3.polygonHull(pts);
+    return d3.line().curve(d3.curveCatmullRomClosed.alpha(.8))(h);
+  }
+  function curve(a, b, bend) {
+    const [x1, y1] = P[a], [x2, y2] = P[b], dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy);
+    const ux = dx / L, uy = dy / L, sx = x1 + ux * 20, sy = y1 + uy * 20, ex = x2 - ux * 21, ey = y2 - uy * 21;
+    const mx = (sx + ex) / 2 - uy * bend, my = (sy + ey) / 2 + ux * bend;
+    return `M${sx},${sy}Q${mx},${my} ${ex},${ey}`;
+  }
+  function draw() {
+    seg.attr('aria-pressed', d => d.t === cur);
+    const showF = el('#tFriend').checked, showH = el('#tHost').checked, showR = el('#tRom').checked, showG = el('#tGroups').checked;
+    const edges = [];
+    let groups, side;
+    if (cur < T) {
+      const w = W[cur];
+      for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+        const s = w.S[i][j];
+        if (s > 0 && showF) edges.push({ k: `f${i}-${j}`, cls: 'e-pos', a: ids[i], b: ids[j], w: 1 + (fm(cur, i, j) - 3) * 1.6, op: .75, tip: `${ids[i]}–${ids[j]} friendship ${fm(cur, i, j).toFixed(1)}/5` });
+        if (s < 0 && showH) edges.push({ k: `h${i}-${j}`, cls: 'e-neg', a: ids[i], b: ids[j], w: 2.5, op: .9, tip: `${ids[i]}–${ids[j]} hostility ${R.hostility[cur][i][j]} / ${R.hostility[cur][j][i]}` });
+      }
+      if (showR) {
+        w.couples.forEach(([a, b]) => edges.push({ k: `c${a}${b}`, cls: 'e-rom', a, b, w: 4.5, op: .9, tip: `${a} and ${b} are dating` }));
+        w.exes.forEach(([a, b]) => edges.push({ k: `x${a}${b}`, cls: 'e-rom', a, b, w: 1.75, op: .9, dash: '5 4', tip: `${a} and ${b}: exes` }));
+        w.crushes.forEach(([a, b]) => edges.push({ k: `r${a}${b}`, cls: 'e-rom', a, b, w: 1.5, op: .95, bend: 26, arrow: true, tip: `${a} is interested in ${b}` }));
+      }
+      groups = w.groups.filter(g => g.members.length >= 2);
+      side = sideWave(cur);
+    } else {
+      for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+        const pp = FC.p_positive[i][j], pn = FC.p_negative[i][j], pd = FC.p_dating[i][j];
+        if (pp >= .5 && showF) edges.push({ k: `f${i}-${j}`, cls: 'e-pos', a: ids[i], b: ids[j], w: 1 + (pp - .5) * 8, op: .35 + pp * .5, tip: `${ids[i]}–${ids[j]} friends in ${pct(pp)} of futures` });
+        if (pn >= .5 && showH) edges.push({ k: `h${i}-${j}`, cls: 'e-neg', a: ids[i], b: ids[j], w: 2.5, op: .35 + pn * .55, tip: `${ids[i]}–${ids[j]} hostile in ${pct(pn)} of futures` });
+        if (pd >= .5 && showR) edges.push({ k: `c${i}-${j}`, cls: 'e-rom', a: ids[i], b: ids[j], w: 4.5, op: .5 + pd * .4, tip: `${ids[i]} and ${ids[j]} dating during S3 in ${pct(pd)} of futures` });
+      }
+      groups = fcGroups.filter(g => g.members.length >= 2);
+      side = sideForecast();
+    }
+    gH.selectAll('*').remove();
+    if (showG) {
+      const hg = gH.selectAll('g').data(groups).join('g').attr('class', g => 'g-' + gnum(g.label));
+      hg.append('path').attr('class', 'hull').attr('d', g => hullPath(g.members));
+      hg.append('text').attr('class', 'hull-label').attr('x', g => d3.max(g.members, id => P[id][0]) + 24).attr('y', g => d3.min(g.members, id => P[id][1]) - 22)
+        .attr('text-anchor', 'end').text(g => cur < T ? g.label : (g.label === 'G0' ? 'new' : g.label));
+    }
+    const sel = gE.selectAll('path').data(edges, d => d.k).join(
+      enter => enter.append('path').style('opacity', 0).call(e => e.transition().duration(350).style('opacity', d => d.op)),
+      update => update.call(u => u.transition().duration(350).style('opacity', d => d.op)),
+      exit => exit.transition().duration(250).style('opacity', 0).remove());
+    sel.attr('class', d => d.cls).attr('fill', 'none').style('fill', 'none').attr('stroke-width', d => d.w).attr('stroke-linecap', 'round')
+      .attr('stroke-dasharray', d => d.dash || null).attr('marker-end', d => d.arrow ? 'url(#arr)' : null)
+      .attr('d', d => curve(d.a, d.b, d.bend || 0));
+    hover(sel, d => d.tip);
+    el('#netSide').innerHTML = side;
+  }
+  function describe(e) {
+    if (e.kind === 'formed') return `<b>${e.group}</b> formed${e.from && e.from.length ? ' from members of ' + e.from.join(' and ') : ''}`;
+    if (e.kind === 'split') return `<b>${e.group}</b> split across ${e.into.join(' and ')}`;
+    if (e.kind === 'dissolved') return `<b>${e.group}</b> dissolved`;
+    if (e.kind === 'stable') return `<b>${e.group}</b> unchanged`;
+    const bits = []; if (e.joined.length) bits.push(e.joined.join(', ') + ' joined'); if (e.left.length) bits.push(e.left.join(', ') + ' left');
+    return `<b>${e.group}</b>: ${bits.join('; ')}`;
+  }
+  window.describeGroupEvent = describe;
+  function sideWave(t) {
+    const w = W[t], mt = w.metrics;
+    const evs = D.events.filter(e => e.date <= waves[t].date && (t === 0 || e.date > waves[t - 1].date));
+    return `<div class="block"><span class="label">${waves[t].id} · ${waves[t].date}</span><h3>${esc(waves[t].label)}</h3>
+      <ul><li>${mt.positive_ties} friendships, ${mt.negative_ties} hostile ties, ${mt.couples} couple${mt.couples === 1 ? '' : 's'}</li>
+      <li>tension ${pct(mt.tension)} of signed triangles</li></ul></div>
+      <div class="block"><h3>Groups</h3><ul>${w.group_events.map(e => `<li>${describe(e)}</li>`).join('')}</ul></div>
+      ${w.unbalanced.length ? `<div class="block"><h3>Caught in the middle</h3><ul>${w.unbalanced.map(u => `<li><b>${u.middle}</b> between ${u.sides.join(' and ')}</li>`).join('')}</ul></div>` : ''}
+      ${evs.length ? `<div class="block"><h3>Events since last wave</h3><ul>${evs.map(e => `<li><span class="mono">${e.date.slice(5)}</span> ${typeLabel(e.type)}: ${e.actors.join(', ')}</li>`).join('')}</ul></div>` : ''}`;
+  }
+  function sideForecast() {
+    return `<div class="block"><span class="label">forecast · ${FC.runs} runs</span><h3>End of semester 3</h3>
+      <ul><li>Lines show ties present in at least half of the simulated futures; fainter means less certain.</li>
+      <li>Groups: people placed together in at least 30% of futures.</li></ul></div>
+      <div class="block"><h3>Most likely changes</h3><ul>${D.predictions.slice(0, 5).map(p => `<li><b>${pct(p.p)}</b> ${esc(p.title)}</li>`).join('')}</ul></div>`;
+  }
+  onTheme(draw);
+})();
+
+// ---------------------------------------------------------------- §3 storyline
+(function storyline() {
+  const cols = waves.map((w, t) => ({ t, label: w.id, groups: W[t].groups })).concat([{ t: T, label: 'S3 end (forecast)', groups: null }]);
+  const fcG = FC.consensus.map(g => {
+    let best = 'G0', bo = 1; W[T - 1].groups.forEach(h => { const o = h.members.filter(x => g.includes(x)).length; if (o > bo) { bo = o; best = h.label; } }); return { label: best, members: g };
+  });
+  const seen = new Set(); fcG.forEach(g => { if (seen.has(g.label)) g.label = 'G0'; seen.add(g.label); });
+  cols[T].groups = fcG;
+  const VW = 900, rowH = 22, gap = 18, top = 30, lx = 70, rx = VW - 70;
+  const x = d3.scalePoint().domain(cols.map(c => c.t)).range([lx + 40, rx - 40]);
+  const ypos = cols.map(() => ({}));
+  let maxY = 0;
+  cols.forEach((c, k) => {
+    const order = [...c.groups].sort((a, b) => {
+      const avg = g => k ? d3.mean(g.members, id => ypos[k - 1][id]) : 0;
+      return k ? avg(a) - avg(b) : b.members.length - a.members.length;
+    });
+    let y = top;
+    c.layout = order.map(g => {
+      const mem = k ? [...g.members].sort((a, b) => ypos[k - 1][a] - ypos[k - 1][b]) : g.members;
+      const y0 = y; mem.forEach((id, j) => { ypos[k][id] = y + 12 + j * rowH; });
+      y += mem.length * rowH + 4 + gap; return { label: g.label, y0, h: mem.length * rowH + 4 };
+    });
+    maxY = Math.max(maxY, y);
+  });
+  const svg = d3.select('#story').append('svg').attr('viewBox', `0 0 ${VW} ${maxY + 4}`);
+  cols.forEach(c => {
+    svg.append('text').attr('x', x(c.t)).attr('y', 14).attr('text-anchor', 'middle').style('fill', c.t === T ? 'var(--accent)' : 'var(--ink)').text(c.label);
+    c.layout.forEach(b => {
+      const g = svg.append('g').attr('class', 'g-' + gnum(b.label));
+      g.append('rect').attr('class', 'band').attr('x', x(c.t) - 34).attr('y', b.y0).attr('width', 68).attr('height', b.h).attr('rx', 4);
+      g.append('rect').attr('class', 'band-edge').attr('x', x(c.t) - 34).attr('y', b.y0).attr('width', 3).attr('height', b.h).attr('rx', 1.5);
+      if (b.h > rowH + 4 || true) g.append('text').attr('x', x(c.t) + 30).attr('y', b.y0 + 12).attr('text-anchor', 'end').style('font-size', '9.5px').text(c.t === T && b.label === 'G0' ? 'new' : b.label);
+    });
+  });
+  const line = d3.line().curve(d3.curveBumpX);
+  const paths = svg.append('g').selectAll('path').data(ids).join('path').attr('class', 'story')
+    .attr('d', id => line(cols.flatMap((c, k) => [[x(c.t) - 26, ypos[k][id]], [x(c.t) + 18, ypos[k][id]]])))
+    .attr('stroke-dasharray', null);
+  const labs = svg.append('g');
+  const hl = id => { paths.classed('dim', d => id && d !== id).classed('hi', d => d === id); };
+  ids.forEach(id => {
+    [[lx + 4, ypos[0][id], 'end', 0], [rx - 4, ypos[T][id], 'start', T]].forEach(([xx, yy, a]) => {
+      labs.append('text').attr('x', xx).attr('y', yy + 4).attr('text-anchor', a).style('fill', 'var(--ink)').style('cursor', 'pointer').text(id)
+        .on('pointerenter', () => hl(id)).on('pointerleave', () => hl(null));
+    });
+  });
+  paths.on('pointerenter', (e, id) => { hl(id); showTip(e, personTip(id, T - 1)); }).on('pointermove', moveTip).on('pointerleave', () => { hl(null); hideTip(); });
+
+  el('#gevents').innerHTML = '<thead><tr><th>Wave</th><th>Groups</th><th>What happened</th></tr></thead><tbody>' +
+    W.map((w, t) => `<tr><td class="mono">${waves[t].id}</td><td>${w.groups.map(g => `<span class="chip g-${gnum(g.label)}"><i class="dot" style="background:var(--gc)"></i>${g.label}: ${g.members.join(' ')}</span>`).join(' ')}</td><td>${w.group_events.map(e => window.describeGroupEvent(e)).join('<br>')}</td></tr>`).join('') + '</tbody>';
+})();
+
+// ---------------------------------------------------------------- shared mini line chart
+function miniLine(container, o) {
+  // o: {title, values[], labels[], domain:[a,b], fmt, baseline, bands, observed, dashFrom, ticks}
+  const VW = 260, VH = 150, m = { l: 34, r: 30, t: 28, b: 22 };
+  const div = d3.select(container).append('div');
+  const svg = div.append('svg').attr('viewBox', `0 0 ${VW} ${VH}`);
+  svg.append('text').attr('x', 0).attr('y', 12).style('fill', 'var(--ink)').style('font-family', 'var(--f-body)').style('font-size', '12.5px').style('font-weight', 600).text(o.title);
+  const x = d3.scalePoint().domain(o.labels).range([m.l + 6, VW - m.r]);
+  const y = d3.scaleLinear().domain(o.domain).range([VH - m.b, m.t]).nice();
+  y.ticks(o.ticks || 3).forEach(v => {
+    svg.append('line').attr('class', 'gridline').attr('x1', m.l).attr('x2', VW - m.r + 6).attr('y1', y(v)).attr('y2', y(v));
+    svg.append('text').attr('x', m.l - 6).attr('y', y(v) + 3.5).attr('text-anchor', 'end').text(o.fmt(v));
+  });
+  o.labels.forEach(l => svg.append('text').attr('x', x(l)).attr('y', VH - 6).attr('text-anchor', 'middle').text(l));
+  if (o.baseline != null) {
+    svg.append('line').attr('x1', m.l).attr('x2', VW - m.r + 6).attr('y1', y(o.baseline)).attr('y2', y(o.baseline)).style('stroke', 'var(--ink-2)').attr('stroke-width', 1).attr('stroke-dasharray', '2 3');
+    svg.append('text').attr('x', VW - m.r + 6).attr('y', y(o.baseline) - 4).attr('text-anchor', 'end').style('font-size', '9.5px').text('random');
+  }
+  if (o.bands) {
+    const pts = o.bands.map((b, k) => b && { x: x(o.labels[k]), lo: y(b.lo), hi: y(b.hi), md: y(b.median) }).filter(Boolean);
+    svg.append('path').attr('class', 'fcband').attr('d', d3.area().x(d => d.x).y0(d => d.lo).y1(d => d.hi)(pts));
+    svg.append('path').style('fill', 'none').attr('class', 'e-accent').attr('stroke-width', 2).attr('stroke-dasharray', o.dashBands ? '4 3' : null).attr('d', d3.line().x(d => d.x).y(d => d.md)(pts));
+    const hits = svg.selectAll('rect.hb').data(o.bands.map((b, k) => ({ b, k })).filter(d => d.b)).join('rect').attr('x', d => x(o.labels[d.k]) - 12).attr('y', m.t).attr('width', 24).attr('height', VH - m.t - m.b).style('fill', 'transparent');
+    hover(hits, d => `<b>${o.labels[d.k]}</b><br>simulated median ${o.fmt(d.b.median)}<br><span class="m">80% range ${o.fmt(d.b.lo)}–${o.fmt(d.b.hi)}</span>${o.values && o.values[d.k] != null ? '<br>observed ' + o.fmt(o.values[d.k]) : ''}`);
+  }
+  if (o.values) {
+    const pts = o.values.map((v, k) => v == null ? null : { k, x: x(o.labels[k]), y: y(v), v }).filter(Boolean);
+    if (o.connect !== false) svg.append('path').style('fill', 'none').style('stroke', o.lineVar || 'var(--accent)').attr('stroke-width', 2).attr('stroke-linejoin', 'round').attr('d', d3.line().x(d => d.x).y(d => d.y)(pts));
+    const dots = svg.selectAll('circle.v').data(pts).join('circle').attr('cx', d => d.x).attr('cy', d => d.y).attr('r', 4.5).attr('class', 'ring').style('fill', o.dotVar || 'var(--accent)');
+    const last = pts[pts.length - 1];
+    if (o.endLabel !== false) svg.append('text').attr('x', last.x + 8).attr('y', last.y + 4).style('fill', 'var(--ink)').text(o.fmt(last.v));
+    hover(dots, d => `<b>${o.labels[d.k]}</b> · ${esc(o.title)}<br>${o.fmt(d.v)}`);
+  }
+  return svg;
+}
+
+// ---------------------------------------------------------------- §4 small multiples
+(function smalls() {
+  const L = waves.map(w => w.id), M = k => W.map(w => w.metrics[k]);
+  const pc = v => Math.round(v * 100) + '%', f2 = v => (+v).toFixed(2), i0 = v => Math.round(v);
+  const specs = [
+    { title: 'Density (directed ties ≥3)', k: 'density', domain: [0, .6], fmt: pc },
+    { title: 'Reciprocity', k: 'reciprocity', domain: [0, 1], fmt: pc },
+    { title: 'Transitivity (closed triangles)', k: 'transitivity', domain: [0, .6], fmt: pc },
+    { title: 'Friendship ties', k: 'positive_ties', domain: [0, 20], fmt: i0 },
+    { title: 'Hostile ties', k: 'negative_ties', domain: [0, 6], fmt: i0 },
+    { title: 'Tension (unbalanced share)', k: 'tension', domain: [0, .3], fmt: pc },
+    { title: 'Gender E-I index', k: 'ei_gender', domain: [-1, .5], fmt: f2, base: 'ei_gender' },
+    { title: 'Housing E-I index', k: 'ei_housing', domain: [-1, .5], fmt: f2, base: 'ei_housing' },
+    { title: 'Ties inside a shared context', k: 'focus_share', domain: [0, 1], fmt: pc },
+    { title: 'Ties kept from last wave', k: 'stability', domain: [0, 1], fmt: pc },
+    { title: 'Perception gap (mean |A→B − B→A|)', k: 'asymmetry', domain: [0, 1], fmt: f2 },
+    { title: 'Mean friendship rating', k: 'mean_friendship', domain: [0, 3], fmt: f2 },
+  ];
+  specs.forEach(s => miniLine('#smalls', { title: s.title, labels: L, values: M(s.k), domain: s.domain, fmt: s.fmt, baseline: s.base ? W[T - 1].baselines[s.base] : null }));
+})();
+
+// ---------------------------------------------------------------- §5 people
+(function people() {
+  const cls = r => ({ hub: 'hub', broker: 'broker', 'caught in the middle': 'middle', 'in open conflict': 'conflict', 'one enemy': 'enemy', peripheral: 'peripheral' }[r] || '');
+  el('#roles').innerHTML = `<thead><tr><th>ID</th>${waves.map(w => `<th>${w.id}</th>`).join('')}</tr></thead><tbody>` +
+    ids.map(id => `<tr><td class="mono">${id}</td>${W.map(w => `<td><div class="chips">${w.roles[id].map(r => `<span class="chip ${cls(r)}">${r}</span>`).join('')}</div></td>`).join('')}</tr>`).join('') + '</tbody>';
+  const P = W[T - 1].people, VW = 620, rh = 26, lw = 46, top = 22;
+  const x = d3.scaleLinear().domain([1, 3]).range([lw + 10, VW - 44]);
+  const order = [...ids].sort((a, b) => (P[b].gives - P[b].receives) - (P[a].gives - P[a].receives));
+  const svg = d3.select('#gives').append('svg').attr('viewBox', `0 0 ${VW} ${top + n * rh + 18}`);
+  x.ticks(5).forEach(v => { svg.append('line').attr('class', 'gridline').attr('x1', x(v)).attr('x2', x(v)).attr('y1', top - 6).attr('y2', top + n * rh); svg.append('text').attr('x', x(v)).attr('y', top + n * rh + 14).attr('text-anchor', 'middle').text(v); });
+  const g = svg.selectAll('g.r').data(order).join('g').attr('transform', (d, k) => `translate(0,${top + k * rh + rh / 2})`);
+  g.append('text').attr('x', lw - 6).attr('y', 4).attr('text-anchor', 'end').style('fill', 'var(--ink)').text(d => d);
+  g.append('line').attr('x1', d => x(Math.min(P[d].gives, P[d].receives))).attr('x2', d => x(Math.max(P[d].gives, P[d].receives))).style('stroke', 'var(--axis)').attr('stroke-width', 3).attr('stroke-linecap', 'round');
+  g.append('circle').attr('cx', d => x(P[d].gives)).attr('r', 5.5).attr('class', 'ring').style('fill', 'var(--accent)');
+  g.append('circle').attr('cx', d => x(P[d].receives)).attr('r', 5.5).attr('class', 'ring').style('fill', 'var(--c2)');
+  g.append('text').attr('x', VW - 4).attr('y', 4).attr('text-anchor', 'end').text(d => { const v = P[d].gives - P[d].receives; return (v > 0 ? '+' : '') + v.toFixed(1); });
+  hover(g, d => `<b>${d}</b> at ${waves[T - 1].id}<br>gives ${P[d].gives.toFixed(2)} · receives ${P[d].receives.toFixed(2)}`);
+  el('#profiles').innerHTML = ids.map(id => `<div class="profile"><b>${id}</b> · ${person[id].gender === 'F' ? 'woman' : 'man'}, ${esc(person[id].origin)}. ${esc(D.profiles[id])}</div>`).join('');
+})();
+
+// ---------------------------------------------------------------- §6 pairs
+(function pairs() {
+  const opts = ids.map(id => `<option value="${id}">${id}</option>`).join('');
+  el('#pA').innerHTML = opts; el('#pB').innerHTML = opts; el('#pA').value = 'P03'; el('#pB').value = 'P08';
+  if (!IX.P03) { el('#pA').value = ids[0]; el('#pB').value = ids[1]; }
+  const rom = ['none', 'interest', 'dating', 'ex'];
+  function draw() {
+    const a = el('#pA').value, b = el('#pB').value, i = IX[a], j = IX[b];
+    const box = el('#pairCharts'); box.innerHTML = '';
+    el('#pairLegend').innerHTML = `<span><i class="sw dot" style="background:var(--accent)"></i>${a} about ${b}</span><span><i class="sw dot" style="background:var(--c2)"></i>${b} about ${a}</span>`;
+    if (i === j) { el('#pairEvents').innerHTML = '<p class="note">Pick two different people.</p>'; return; }
+    const L = waves.map(w => w.id);
+    Object.keys(R).forEach(layer => {
+      const top = layer === 'romantic' ? 3 : 5;
+      const fmt = layer === 'romantic' ? (v => rom[Math.round(v)] || v) : (v => Math.round(v));
+      const svg = miniLine(box, { title: layer, labels: L, values: L.map((_, t) => R[layer][t][i][j]), domain: [0, top], fmt, ticks: top, endLabel: false });
+      const x = d3.scalePoint().domain(L).range([40, 230]), y = d3.scaleLinear().domain([0, top]).range([128, 28]);
+      const pts = L.map((l, t) => [x(l), y(R[layer][t][j][i])]);
+      svg.append('path').style('fill', 'none').style('stroke', 'var(--c2)').attr('stroke-width', 2).attr('d', d3.line()(pts));
+      svg.selectAll('circle.o').data(pts).join('circle').attr('cx', d => d[0]).attr('cy', d => d[1]).attr('r', 4).attr('class', 'ring').style('fill', 'var(--c2)');
+    });
+    const ev = D.events.filter(e => (e.actors.includes(a) || e.third.includes(a)) && (e.actors.includes(b) || e.third.includes(b)) && (e.actors.includes(a) || e.actors.includes(b)));
+    el('#pairEvents').innerHTML = ev.length ? `<span class="label">Shared events</span><ul style="margin:6px 0 0;padding-left:18px">${ev.map(e => `<li><span class="mono">${e.date}</span> ${typeLabel(e.type)}: ${e.actors.join(', ')}${e.third.length ? ' (also ' + e.third.join(', ') + ')' : ''}</li>`).join('')}</ul>` : '<p class="note">No logged events between these two.</p>';
+  }
+  el('#pA').addEventListener('change', draw); el('#pB').addEventListener('change', draw); draw();
+})();
+
+// ---------------------------------------------------------------- §7 model
+(function model() {
+  const M = D.model;
+  el('#modelCap').textContent = `Standardised effects (rating points per standard deviation), with 90% intervals from a bootstrap over pairs. ${M.n_obs} rating changes from ${M.n_pairs} pairs; R² ${M.r2.toFixed(2)}.`;
+  const rows = [...M.coefs].sort((a, b) => b.beta - a.beta);
+  const VW = 860, rh = 30, lw = 300, top = 18, rw = 220;
+  const x = d3.scaleLinear().domain([Math.min(-.9, d3.min(rows, r => r.lo)), Math.max(.6, d3.max(rows, r => r.hi))]).range([lw, VW - rw]).nice();
+  const svg = d3.select('#coefs').append('svg').attr('viewBox', `0 0 ${VW} ${top + rows.length * rh + 22}`);
+  x.ticks(6).forEach(v => { svg.append('line').attr('class', v === 0 ? 'axisline' : 'gridline').attr('x1', x(v)).attr('x2', x(v)).attr('y1', top - 6).attr('y2', top + rows.length * rh); svg.append('text').attr('x', x(v)).attr('y', top + rows.length * rh + 16).attr('text-anchor', 'middle').text(v.toFixed(1)); });
+  const g = svg.selectAll('g.r').data(rows).join('g').attr('transform', (d, k) => `translate(0,${top + k * rh + rh / 2})`);
+  const c = d => d.clear ? (d.beta > 0 ? 'var(--pos)' : 'var(--neg)') : 'var(--muted)';
+  g.append('text').attr('x', lw - 12).attr('y', 4).attr('text-anchor', 'end').style('fill', 'var(--ink)').style('font-family', 'var(--f-body)').style('font-size', '12.5px').text(d => d.label);
+  g.append('line').attr('x1', d => x(d.lo)).attr('x2', d => x(d.hi)).style('stroke', c).attr('stroke-width', 2).attr('stroke-linecap', 'round');
+  g.append('circle').attr('cx', d => x(d.beta)).attr('r', 5.5).attr('class', 'ring').style('fill', c);
+  g.append('text').attr('x', VW - rw + 14).attr('y', 4).style('font-family', 'var(--f-body)').style('font-size', '11.5px').text(d => d.theory.length > 34 ? d.theory.slice(0, 33) + '…' : d.theory);
+  hover(g, d => `<b>${esc(d.label)}</b><br>${d.beta >= 0 ? '+' : ''}${d.beta.toFixed(2)} per SD <span class="m">[${d.lo.toFixed(2)}, ${d.hi.toFixed(2)}]</span><br>raw: ${d.raw >= 0 ? '+' : ''}${d.raw.toFixed(3)} per unit<br><span class="m">${esc(d.theory)}</span>`);
+})();
+
+// ---------------------------------------------------------------- §8 validation
+(function validation() {
+  const S = D.validation.one_step, VW = 420, VH = 220, m = { l: 40, r: 10, t: 16, b: 30 };
+  const x0 = d3.scaleBand().domain(S.map(s => s.from_wave + '→' + s.to_wave)).range([m.l, VW - m.r]).padding(.3);
+  const x1 = d3.scaleBand().domain(['model', 'base']).range([0, x0.bandwidth()]).padding(.15);
+  const y = d3.scaleLinear().domain([0, .25]).range([VH - m.b, m.t]);
+  const svg = d3.select('#brier').append('svg').attr('viewBox', `0 0 ${VW} ${VH}`);
+  y.ticks(5).forEach(v => { svg.append('line').attr('class', 'gridline').attr('x1', m.l).attr('x2', VW - m.r).attr('y1', y(v)).attr('y2', y(v)); svg.append('text').attr('x', m.l - 6).attr('y', y(v) + 3.5).attr('text-anchor', 'end').text(v.toFixed(2)); });
+  svg.append('line').attr('class', 'axisline').attr('x1', m.l).attr('x2', VW - m.r).attr('y1', y(0)).attr('y2', y(0));
+  S.forEach(s => {
+    const key = s.from_wave + '→' + s.to_wave;
+    svg.append('text').attr('x', x0(key) + x0.bandwidth() / 2).attr('y', VH - 10).attr('text-anchor', 'middle').text(key);
+    [['model', s.brier, 'var(--accent)'], ['base', s.brier_persistence, 'var(--muted)']].forEach(([k, v, col]) => {
+      const bw = Math.min(24, x1.bandwidth()), bx = x0(key) + x1(k) + (x1.bandwidth() - bw) / 2, h = y(0) - y(v), r = Math.min(4, h);
+      const p = `M${bx},${y(0)}V${y(v) + r}Q${bx},${y(v)} ${bx + r},${y(v)}H${bx + bw - r}Q${bx + bw},${y(v)} ${bx + bw},${y(v) + r}V${y(0)}Z`;
+      const bar = svg.append('path').attr('d', p).style('fill', col);
+      svg.append('text').attr('x', bx + bw / 2).attr('y', y(v) - 5).attr('text-anchor', 'middle').style('fill', 'var(--ink)').text(v.toFixed(2));
+      hover(bar, () => `<b>${key}</b><br>${k === 'model' ? 'model' : 'no-change baseline'}: ${v.toFixed(3)}`);
+    });
+  });
+  const tot = d3.sum(S, s => s.changed), called = d3.sum(S, s => (s.changed_called || 0) * s.changed);
+  el('#brierNote').textContent = `${tot} friendship ties appeared or disappeared across the three steps. The model put more than 50% on the right outcome for ${Math.round(called)} of them: it is better than assuming no change overall, but most individual flips still surprise it.`;
+  const FR = D.validation.free_run, L = waves.map(w => w.id);
+  [['density', 'Density', v => Math.round(v * 100) + '%', [0, .6]], ['transitivity', 'Transitivity', v => Math.round(v * 100) + '%', [0, .7]],
+   ['ei_gender', 'Gender E-I', v => (+v).toFixed(2), [-1, .4]], ['positive_ties', 'Friendship ties', v => Math.round(v), [0, 20]],
+   ['negative_ties', 'Hostile ties', v => Math.round(v), [0, 6]], ['tension', 'Tension', v => Math.round(v * 100) + '%', [0, .3]]]
+    .forEach(([k, t, f, dom]) => miniLine('#free', { title: t + (FR[k].inside ? '' : ' · missed'), labels: L, values: FR[k].observed, bands: FR[k].bands, domain: dom, fmt: f, connect: false, dotVar: 'var(--ink)', endLabel: false }));
+})();
+
+// ---------------------------------------------------------------- §9 forecast
+(function forecast() {
+  el('#fcLede').textContent = `${FC.runs.toLocaleString()} simulated futures, ${FC.steps} waves past ${waves[T - 1].id}. Homes and dorms stay as they are; class sections are reshuffled at random in every run; the study group continues in 75% of runs and the student association in 70%. Breakup hazard ${FC.breakup_hazard_month.toFixed(2)} per month; a crush starts in ${(FC.romance_rates.onset * 100).toFixed(1)}% of opposite-gender pairs per wave; mutual interest becomes a relationship ${pct(FC.romance_rates.couple)} of the time.`;
+  // matrix
+  const cs = 40, lw = 40, top = 28;
+  const svg = d3.select('#fcMatrix').append('svg').attr('viewBox', `0 0 ${lw + n * cs + 2} ${top + n * cs + 2}`);
+  function drawM() {
+    svg.selectAll('*').remove();
+    const pos = d3.interpolateRgb(cssv('--mid'), cssv('--pos')), neg = d3.interpolateRgb(cssv('--mid'), cssv('--neg'));
+    ids.forEach((id, k) => { svg.append('text').attr('x', lw + k * cs + cs / 2).attr('y', 16).attr('text-anchor', 'middle').text(id); svg.append('text').attr('x', lw - 6).attr('y', top + k * cs + cs / 2 + 4).attr('text-anchor', 'end').text(id); });
+    const cells = []; for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if (i !== j) cells.push({ i, j, p: FC.p_positive[i][j], q: FC.p_negative[i][j], d: FC.p_dating[i][j] });
+    const g = svg.selectAll('g.c').data(cells).join('g').attr('transform', d => `translate(${lw + d.j * cs},${top + d.i * cs})`);
+    g.append('rect').attr('width', cs - 2).attr('height', cs - 2).attr('rx', 3).style('fill', d => d.q > d.p ? neg(d.q) : pos(d.p));
+    g.append('text').attr('x', (cs - 2) / 2).attr('y', (cs - 2) / 2 + 4).attr('text-anchor', 'middle').style('fill', d => Math.max(d.p, d.q) > .55 ? '#fff' : cssv('--ink'))
+      .text(d => Math.max(d.p, d.q) >= .1 ? Math.round(Math.max(d.p, d.q) * 100) : '');
+    hover(g, d => `<b>${ids[d.i]}–${ids[d.j]}</b> at end of S3<br>friends ${pct(d.p)} · hostile ${pct(d.q)}${d.d > .02 ? '<br>dating at some point in S3 ' + pct(d.d) : ''}`);
+  }
+  onTheme(drawM);
+  // fan charts
+  const L = waves.map(w => w.id).concat(['W5', 'W6']);
+  [['positive_ties', 'Friendship ties', v => Math.round(v), [0, 20]], ['negative_ties', 'Hostile ties', v => Math.round(v), [0, 7]],
+   ['tension', 'Tension', v => Math.round(v * 100) + '%', [0, .5]], ['density', 'Density', v => Math.round(v * 100) + '%', [0, .6]]]
+    .forEach(([k, t, f, dom]) => {
+      const obs = W.map(w => w.metrics[k]).concat([null, null]);
+      const bands = W.map((w, i) => i === T - 1 ? { median: w.metrics[k], lo: w.metrics[k], hi: w.metrics[k] } : null).concat(FC.trajectories[k]);
+      miniLine('#fan', { title: t, labels: L, values: obs, bands, domain: dom, fmt: f, dashBands: true, endLabel: false });
+    });
+  // triads
+  const cats = [['unresolved', 'still in the middle', 'var(--muted)'], ['drop_b', 'keeps first, drops second', 'var(--accent)'], ['drop_a', 'keeps second, drops first', 'var(--c2)'], ['reconciled', 'the two sides reconcile', 'var(--g2)'], ['other', 'other', 'var(--axis)']];
+  const VW = 760, rh = 46, lw2 = 210;
+  const tsvg = d3.select('#triads').append('svg').attr('viewBox', `0 0 ${VW} ${FC.triads.length * rh + 6}`);
+  const xx = d3.scaleLinear().domain([0, 1]).range([lw2, VW - 4]);
+  FC.triads.forEach((t, k) => {
+    const y = k * rh + 8;
+    tsvg.append('text').attr('x', lw2 - 10).attr('y', y + 13).attr('text-anchor', 'end').style('fill', 'var(--ink)').text(`${t.middle}: ${t.a} vs ${t.b}`);
+    let acc = 0;
+    cats.forEach(([key, lab, col]) => {
+      const v = t[key]; if (v <= 0) return;
+      const r = tsvg.append('rect').attr('x', xx(acc) + (acc ? 1 : 0)).attr('y', y).attr('width', Math.max(0, xx(acc + v) - xx(acc) - (acc ? 2 : 1))).attr('height', 20).attr('rx', 3).style('fill', col);
+      const wpx = xx(acc + v) - xx(acc);
+      if (wpx > 44) tsvg.append('text').attr('x', xx(acc) + wpx / 2).attr('y', y + 14).attr('text-anchor', 'middle').style('fill', key === 'unresolved' || key === 'other' ? 'var(--ink)' : '#fff').text(pct(v));
+      hover(r, () => `<b>${t.middle}</b> (${t.a} vs ${t.b})<br>${lab.replace('first', t.a).replace('second', t.b).replace('first', t.a)}: ${pct(v)}`);
+      acc += v;
+    });
+  });
+  el('#triadLegend').innerHTML = cats.map(([k, l, c]) => `<span><i class="sw dot" style="background:${c}"></i>${FC.triads.length === 1 ? l.replace('first', FC.triads[0].a).replace('second', FC.triads[0].b).replace('first', FC.triads[0].a) : l}</span>`).join('');
+  // risk table
+  const meter = v => `<span class="mini-meter"><i style="width:${v * 100}%"></i></span>${pct(v)}`;
+  el('#risk').innerHTML = '<thead><tr><th>ID</th><th class="num">Friends now</th><th class="num">Expected end S3</th><th>Isolation risk (≤1 friend)</th><th>At least one hostile tie</th></tr></thead><tbody>' +
+    ids.map((id, k) => `<tr><td class="mono">${id}</td><td class="num">${W[T - 1].people[id].degree}</td><td class="num">${FC.expected_degree[k].toFixed(1)}</td><td class="num" style="text-align:left">${meter(FC.p_isolated[k])}</td><td class="num" style="text-align:left">${meter(FC.p_conflict[k])}</td></tr>`).join('') + '</tbody>';
+})();
+
+// ---------------------------------------------------------------- §10 theory, §11 method
+(function reading() {
+  const w0 = W[0].metrics, wl = W[T - 1].metrics, coef = Object.fromEntries(D.model.coefs.map(c => [c.key, c]));
+  const s = c => `${c.beta >= 0 ? '+' : ''}${c.beta.toFixed(2)}`;
+  const mids = [...new Set(W.flatMap(w => w.unbalanced.map(u => u.middle)))];
+  const rows = [
+    ['First-semester friendships sit inside dorms, sections and chats', 'Focus theory (Feld 1981); propinquity (Festinger, Schachter & Back 1950)', `${pct(w0.focus_share)} of W1 ties share a context; shared-context effect ${s(coef.shared)}`],
+    ['Same-gender clusters at the start that mix later', 'Homophily (McPherson, Smith-Lovin & Cook 2001), reduced by sustained contact (Allport\'s contact hypothesis)', `Gender E-I ${w0.ei_gender.toFixed(2)} → ${wl.ei_gender.toFixed(2)}; same-gender effect ${s(coef.same_gender)}`],
+    ['Similar grades pull people together; the study group survives every reshuffle', 'Academic homophily; shared goals (social identity)', `GPA-gap effect ${s(coef.gpa_gap)}`],
+    ['A tie moves toward how the other side rates it', 'Reciprocity norm (Gouldner 1960); social exchange', `reciprocity-gap effect ${s(coef.recip_gap)}`],
+    ['After the breakup, friends take sides and hostility spreads', 'Structural balance (Heider 1946; Cartwright & Harary 1956)', `hostile ties 0 → ${wl.negative_ties}; caught in the middle: ${mids.join(', ')}`],
+    ['People who lose their context lose their place', 'Dunbar layers; maintenance cost of ties', `${D.profiles.P01 ? 'P01: ' + W[0].people.P01.degree + ' → ' + W[T - 1].people.P01.degree + ' friends after dorm-mates moved out' : ''}`],
+    ['Investing more than you receive', 'Attachment and perception asymmetry; unrequited liking', `mean perception gap ${wl.asymmetry.toFixed(2)} rating points at ${waves[T - 1].id}`],
+    ['Brokers between groups gain visibility and risk', 'Structural holes (Burt 1992); weak ties (Granovetter 1973)', `brokers at ${waves[T - 1].id}: ${ids.filter(id => W[T - 1].roles[id].includes('broker')).join(', ')}`],
+    ['Groups form, clash, then settle into stable cores', 'Group development (Tuckman 1965)', `ties kept between waves: ${W.slice(1).map(w => pct(w.metrics.stability)).join(' → ')}`],
+  ];
+  el('#theory').innerHTML = '<thead><tr><th>Pattern in this run</th><th>Theory</th><th>Evidence</th></tr></thead><tbody>' + rows.map(r => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td class="mono" style="font-size:12.5px">${esc(r[2])}</td></tr>`).join('') + '</tbody>';
+  const p = FC.params;
+  el('#methodList').innerHTML = [
+    `<b>Ties.</b> A friendship tie is a mean rating of 3 or more across both directions. A hostile tie is a mean hostility of 2 or more, or either side at 3 or more. Hostility overrides friendship.`,
+    `<b>Missing answers.</b> Skipped ratings are filled from the other person's rating of the same tie; this run had ${D.issues.length ? esc(D.issues[0].msg.split(' ')[0]) : 0}.`,
+    `<b>Groups.</b> Louvain on ties with mean friendship 2 or more, best of 40 seeds by modularity, then matched across waves by member overlap (Jaccard ≥ 0.34).`,
+    `<b>Tie-change model.</b> Ordinary least squares on ${D.model.n_obs} directed rating changes, 2,000 bootstrap resamples over pairs. With the real data, replace it with a stochastic actor-oriented model (RSiena), which handles the dependence between ties properly.`,
+    `<b>Simulation.</b> Friendship moves by the fitted model plus noise (σ = ${D.model.sigma.toFixed(2)}). Romance and conflict follow rules: breakup hazard from the event log with a Gamma(1, 12) prior; crush onset and couple formation estimated from the romantic layer with Beta priors; side-taking ${p.side_taking}, jealousy ${p.jealousy}, rivalry ${p.rivalry}, hostility decay ${p.hostility_decay} per wave, balance resolution ${p.balance_resolution}. These rule rates are assumptions to be estimated from the full data.`,
+    `<b>Size.</b> Ten people and four waves is far too small for firm conclusions. Intervals are wide, and one breakup drives most of the conflict. The point of this run is to show that every step of the pipeline works end to end.`,
+    `<b>Privacy.</b> Pseudonyms alone do not protect a known cohort. Keep the file that links names to IDs offline, and report attributes such as hometown in broad bands.`,
+  ].map(x => `<li>${x}</li>`).join('');
+  el('#foot').innerHTML = `Generated ${D.meta.generated} from <span class="mono">${esc(D.meta.dataset)}</span> by <span class="mono">run_analysis.py</span>. ${D.meta.synthetic ? 'Synthetic data.' : ''}`;
+})();
+</script>
+
+</body>
+</html>
