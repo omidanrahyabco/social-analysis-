@@ -11,6 +11,14 @@ python run_analysis.py data/example_10p_2sem
 That reads the six CSV files and writes `outputs/<dataset>/report.html` (an
 interactive report) and `results.json` (every number behind it).
 
+## Documentation
+
+- [Release PDF v0.1.0](docs/release/cohort-model-v0.1.0.pdf): everything below in one document, with figures
+- [How the model works](docs/MODEL.md)
+- [How to put your data in](docs/DATA_GUIDE.md)
+- [The pilot test](docs/PILOT_TEST.md): the invented 10-student story, the run, and what the model found against what was planted
+- [Release notes](docs/RELEASE_NOTES.md)
+
 ## What the pipeline does
 
 | Step | Module | Output |
@@ -20,6 +28,7 @@ interactive report) and `results.json` (every number behind it).
 | Explain change | `cohort/models.py` | tie-change regression with bootstrap intervals (a stand-in for RSiena) |
 | Simulate | `cohort/simulate.py` | one-step and free-run validation, forecast of the next waves (1,000 runs) |
 | Report | `cohort/report.py`, `report_template.html` | findings, predictions and per-person profiles generated from the numbers |
+| Convert surveys | `cohort/convert.py` | square survey sheets (`<layer>_<wave>.csv`) to `dyads.csv` |
 
 ## Input files
 
@@ -48,4 +57,10 @@ The analysis never reads that script, only the CSV files.
 
 ```
 pip install -r requirements.txt
+```
+
+To rebuild the release PDF after a new run:
+
+```
+python docs/build_release_pdf.py
 ```
